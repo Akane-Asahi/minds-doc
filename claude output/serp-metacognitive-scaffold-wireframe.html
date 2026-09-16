@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINDS — Metacognitive Interface for Navigating Directions &amp; Scaffolding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* MINDS palette — warm, editorial, low-glare. Swap here to retheme everything below. */
+    --ink:#17140f;
+    --sub:#726c5a;
+    --sub-light:#9c957f;
+    --line:#c9c2aa;
+    --bg:#E7E3DA;
+    --card:#efece3;
+    --accent:#3f4a34;
+    --accent-soft:#dde2d1;
+    --new:#3f4a34;
+    --new-bg:#dde2d1;
+    --seen:#8a8574;
+    --seen-bg:#e9e5da;
+    --similar:#4c7a52;
+    --similar-bg:#e1ead9;
+    --gap:#a8631f;
+    --gap-bg:#f1e2c9;
+    --dup:#a2402f;
+    --dup-bg:#f3ddd3;
+    --radius:14px;
+    /* sequential/ordinal ramp (same hue family as accent), oldest->newest session */
+    --sess-1:#b9c6ab; /* Session 1 (oldest) */
+    --sess-2:#7c9169; /* Session 2 */
+    --sess-3:#3f4a34; /* Session 3 (most recent) = accent */
+    font-family:'Lexend',-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.55;
+    letter-spacing:0.005em;
+    font-family:'Lexend',-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  body.dys-mode{
+    letter-spacing:0.035em;
+    word-spacing:0.08em;
+    line-height:1.85;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 28px;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    z-index:20;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .brand{display:flex;align-items:baseline;gap:12px;}
+  .brand .wordmark{font-weight:800;font-size:17px;letter-spacing:.06em;color:var(--ink);}
+  .brand .rule{width:1px;height:16px;background:var(--line);display:inline-block;}
+  .brand .tagline{font-size:12px;color:var(--sub);font-weight:400;letter-spacing:.01em;}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .toggle-btn{
+    border:1px solid var(--line);
+    background:transparent;
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-weight:600;
+    color:var(--sub);
+    font-family:inherit;
+  }
+  .toggle-btn.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .searchbar{
+    max-width:1180px;
+    margin:0 auto;
+    padding:18px 28px 0 28px;
+  }
+  .searchbox{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 18px;
+    font-size:15px;
+  }
+  .searchbox .icon{opacity:.6;}
+  .searchbox input{border:none;outline:none;flex:1;font-size:15px;font-family:inherit;background:transparent;color:var(--ink);}
+
+  .layout{
+    max-width:1180px;
+    margin:0 auto;
+    padding:18px 28px 60px 28px;
+    display:grid;
+    grid-template-columns:1fr 300px;
+    gap:20px;
+  }
+  .main-col{display:flex;flex-direction:column;gap:16px;}
+  .side-col{display:flex;flex-direction:column;gap:16px;}
+
+  /* --- Recap capsule --- */
+  .recap{
+    display:none;
+    background:linear-gradient(135deg,#dde2d1,#f2efe6);
+    border:1px solid #cdd3bd;
+    border-radius:var(--radius);
+    padding:16px 18px;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .recap.show{display:flex;}
+  .recap .icon-badge{
+    flex:none;
+    width:38px;height:38px;border-radius:50%;
+    background:var(--accent);color:white;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .recap .recap-body{flex:1;}
+  .recap .recap-title{font-weight:700;font-size:13px;color:var(--accent);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;}
+  .recap p{margin:0 0 8px 0;font-size:14.5px;color:var(--ink);}
+  .recap .recap-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
+  .pill-btn{
+    border:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .pill-btn.primary{background:var(--accent);color:white;}
+  .pill-btn.ghost{background:var(--card);border:1px solid var(--line);color:var(--ink);}
+  .lead-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    background:var(--card);border:1px solid #cdd3bd;border-radius:999px;
+    padding:4px 10px;font-size:12px;color:var(--accent);font-weight:600;margin-top:6px;
+  }
+
+  /* --- Goal & Plan strip --- */
+  .plan-strip{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 18px;
+  }
+  .plan-strip .goal-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .plan-strip .goal-row .g-icon{font-size:18px;}
+  .plan-strip .goal-text{font-weight:700;font-size:15px;flex:1;}
+  .edit-pencil{opacity:.45;font-size:13px;cursor:pointer;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .plan-chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--accent-soft);color:var(--accent);
+    border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;
+    border:1px solid #cdd3bd;
+  }
+  .plan-chip .num{
+    background:var(--accent);color:white;border-radius:50%;
+    width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;
+  }
+
+  /* --- Panels / coverage map --- */
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .panel h3{
+    margin:0 0 12px 0;font-size:12px;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--sub);display:flex;align-items:center;gap:6px;
+  }
+  .theme-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .theme-row:last-child{margin-bottom:0;}
+  .theme-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .theme-dot.explored{background:var(--similar);}
+  .theme-dot.partial{background:#e6a817;}
+  .theme-dot.empty{background:var(--line);border:1px solid #b6ae94;}
+  .theme-label{flex:1;font-size:13.5px;font-weight:600;}
+  .theme-count{font-size:11px;color:var(--sub);background:var(--bg);padding:2px 7px;border-radius:999px;}
+
+  .legend{display:flex;flex-direction:column;gap:8px;}
+  .legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);}
+  .legend-swatch{width:14px;height:14px;border-radius:5px;flex:none;}
+
+  /* --- Result cards --- */
+  .result-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    display:flex;
+    gap:14px;
+  }
+  .result-card .r-glyph{
+    flex:none;width:34px;height:34px;border-radius:10px;
+    background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px;
+  }
+  .result-body{flex:1;min-width:0;}
+  .result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .r-title{font-size:15.5px;font-weight:700;color:var(--ink);margin:0 0 4px 0;}
+  .r-meta{font-size:12.5px;color:var(--sub);margin:0 0 8px 0;}
+  .r-snippet{font-size:13.5px;color:#4a4636;margin:0 0 10px 0;max-width:60ch;}
+  .badge{
+    flex:none;
+    display:flex;align-items:center;gap:6px;
+    padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;
+  }
+  .badge.new{color:var(--new);background:var(--new-bg);}
+  .badge.seen{color:var(--seen);background:var(--seen-bg);}
+  .badge.similar{color:var(--similar);background:var(--similar-bg);}
+  .badge.gap{color:var(--gap);background:var(--gap-bg);}
+  .badge.dup{color:var(--dup);background:var(--dup-bg);}
+  .r-actions{display:flex;gap:8px;align-items:center;}
+  .icon-btn{
+    border:1px solid var(--line);background:var(--card);
+    width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:14px;cursor:pointer;
+  }
+  /* --- Direction-confidence rows ("why this may help your search") --- */
+  .why-match{margin-top:10px;}
+  .why-match-label{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:5px;}
+  .kw-row{
+    display:flex;align-items:center;gap:10px;padding:4px 6px;margin:0 -6px;
+    border-radius:8px;cursor:pointer;transition:background .15s;
+  }
+  .kw-row:hover{background:var(--bg);}
+  .kw-row.kw-saved{background:var(--accent-soft);}
+  .kw-pct{
+    flex:none;min-width:34px;text-align:center;font-size:11px;font-weight:700;
+    padding:3px 7px;border-radius:999px;
+  }
+  /* Four-category confidence system (replaces percentages) */
+  .kw-pct{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .kw-row.tier-excellent .kw-pct, .kw-pct.tier-excellent{background:var(--accent);color:#fff;padding:4px 8px;border-radius:4px;}
+  .kw-row.tier-good .kw-pct, .kw-pct.tier-good{background:var(--seen-bg);color:var(--ink);padding:4px 8px;border-radius:4px;}
+  .kw-row.tier-possible .kw-pct, .kw-pct.tier-possible{background:#f1e2c9;color:#8a611a;padding:4px 8px;border-radius:4px;}
+  .kw-row.tier-no-match .kw-pct, .kw-pct.tier-no-match{background:var(--line);color:var(--sub);padding:4px 8px;border-radius:4px;}
+  /* For backward compat with old tier names, map to new system */
+  .kw-row.tier-high{--tier: excellent;}
+  .kw-row.tier-mid{--tier: good;}
+  .kw-row.tier-low{--tier: possible;}
+  .kw-text{font-size:12.5px;color:var(--ink);flex:1;}
+  .kw-row.tier-low .kw-text{color:var(--sub-light);}
+  .kw-save-mark{font-size:10.5px;color:var(--accent);font-weight:700;white-space:nowrap;opacity:0;}
+  .kw-row.kw-saved .kw-save-mark{opacity:1;}
+  .kw-why-btn{
+    flex:none;width:18px;height:18px;border-radius:50%;
+    border:1px solid var(--sub-light);color:var(--sub);background:var(--card);
+    font-size:10.5px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .kw-why-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* --- "Why this score?" modal --- */
+  .why-modal-eyebrow{font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+  .why-modal-title{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 12px 0;display:flex;align-items:center;gap:10px;}
+  .why-modal-title .kw-pct{font-size:13px;}
+  .why-modal-source{font-size:12px;color:var(--sub);margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+
+  /* --- checkout toast --- */
+  .checkout{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:white;border-radius:999px;
+    padding:10px 12px;display:flex;align-items:center;gap:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    font-size:13px;z-index:30;flex-wrap:wrap;justify-content:center;
+  }
+  .checkout span.label{padding-left:6px;padding-right:4px;font-weight:600;opacity:.85;}
+  .checkout button{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:white;
+    border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer;display:flex;gap:6px;align-items:center;
+  }
+  .checkout button:hover{background:rgba(255,255,255,.18);}
+  .checkout{display:none;}
+  .checkout.show{display:flex;}
+  .checkout-active{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .checkout-active.hide{display:none;}
+  .checkout-paused{display:none;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+  .checkout-paused.show{display:flex;}
+
+  .share-modal-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(23,20,15,.45);z-index:40;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .share-modal-backdrop.show{display:flex;}
+  .share-modal{
+    background:var(--card);border-radius:var(--radius);padding:22px 24px;max-width:460px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .share-modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .share-modal-header h3{margin:0;font-size:16px;}
+  .share-modal-sub{font-size:12.5px;color:var(--sub);margin:0 0 14px 0;}
+  .share-modal-body{
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;
+    font-size:13.5px;line-height:1.6;margin-bottom:16px;
+  }
+  .share-modal-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .share-modal-note{font-size:12px;color:var(--similar);margin-top:10px;min-height:14px;}
+
+  .section-label{
+    font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);font-weight:700;
+    margin:4px 0 -4px 4px;
+  }
+
+  footer.note{
+    max-width:1180px;margin:0 auto;padding:0 28px 60px 28px;color:var(--sub);font-size:12.5px;
+  }
+  footer.note b{color:var(--ink);}
+
+  /* --- Session Overview screen (pre-SERP) --- */
+  .overview-wrap{display:none;max-width:900px;margin:0 auto;padding:24px 28px 60px 28px;}
+  .overview-wrap.show{display:block;}
+  .ov-header{margin-bottom:18px;}
+  .ov-header .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);font-weight:700;margin-bottom:6px;}
+  .ov-header h1{font-size:21px;margin:0 0 6px 0;display:flex;align-items:center;gap:10px;}
+  .ov-header .meta{font-size:13px;color:var(--sub);}
+  .ov-cta-row{display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px 0;flex-wrap:wrap;gap:10px;}
+  .ov-cta-row .hint{font-size:13.5px;color:var(--ink);background:var(--accent-soft);border:1px solid #cdd3bd;padding:9px 14px;border-radius:10px;}
+
+  .next-step-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .ns-btn{
+    text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    font-size:13px;font-weight:600;padding:9px 12px;border-radius:10px;cursor:pointer;
+  }
+  .ns-btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .ns-btn .ns-sub{display:block;font-size:11px;font-weight:400;color:var(--sub);margin-top:2px;}
+  .ns-btn.primary .ns-sub{color:var(--accent-soft);}
+
+  .subgoal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+  .subgoal-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;display:flex;gap:14px;
+  }
+  .subgoal-card.flag-unclear{border-color:#e8c58f;background:#f8f2e4;}
+  .subgoal-card.not-started{opacity:.7;}
+  .ring.ring-empty{background:var(--line);}
+  .ring.ring-empty .hole{color:var(--sub-light);}
+  .ring{
+    flex:none;width:64px;height:64px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .ring .hole{
+    width:42px;height:42px;border-radius:50%;background:var(--card);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--sub);
+  }
+  .subgoal-card.flag-unclear .ring .hole{background:#f8f2e4;}
+  .sg-body{flex:1;min-width:0;}
+  .sg-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .sg-title{font-weight:700;font-size:14.5px;}
+  .sg-counts{font-size:12px;color:var(--sub);margin:4px 0 10px 0;}
+  .rate-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .rate-btn{
+    border:1px solid var(--line);background:var(--card);border-radius:8px;
+    padding:5px 9px;font-size:12.5px;cursor:pointer;
+  }
+  .rate-btn.active{border-color:var(--gap);background:var(--gap-bg);}
+  .rate-btn.active.good{border-color:var(--similar);background:var(--similar-bg);}
+  .rate-btn.active.mid{border-color:#e6a817;background:#fff6e6;}
+  .sg-note{font-size:11.5px;color:var(--gap);margin-top:6px;font-weight:600;}
+  .sg-go{
+    margin-top:10px;border:none;background:var(--accent);color:white;font-size:12px;font-weight:700;
+    padding:7px 12px;border-radius:8px;cursor:pointer;
+  }
+
+  .leads-mini{
+    margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;
+    display:flex;align-items:center;gap:10px;font-size:13.5px;
+  }
+
+  /* --- Session History (multi-session) screen --- */
+  .history-wrap{display:none;max-width:1180px;margin:0 auto;padding:24px 28px 60px 28px;}
+  .history-wrap.show{display:block;}
+
+  /* Row 1: goal+recap (left) | progress trace (right) */
+  .history-row1{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px;}
+  .history-row1-left{display:flex;flex-direction:column;gap:20px;min-width:0;}
+  .history-row1-right{display:flex;flex-direction:column;min-width:0;}
+  .history-row1-right .trace-panel{margin-bottom:0;height:100%;}
+
+  /* Row 2: all sessions, full width */
+  .history-row2{min-width:0;}
+  .session-hint{font-size:11.5px;color:var(--sub);margin:-4px 0 12px 2px;}
+  .session-cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;}
+
+  @media (max-width:900px){
+    .history-row1{grid-template-columns:1fr;}
+    .session-cards-grid{grid-template-columns:1fr;}
+  }
+  .sess-live-badge{
+    background:var(--similar-bg);color:var(--similar);font-size:10.5px;font-weight:800;
+    padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;
+  }
+
+  .overall-recap{
+    background:linear-gradient(135deg,#dde2d1,#f2efe6);border:1px solid #cdd3bd;border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:20px;
+  }
+  .overall-recap .rc-eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin-bottom:6px;}
+  .overall-recap p{margin:0;font-size:14.5px;}
+  .recap-lines{display:flex;flex-direction:column;gap:6px;}
+  .recap-line{display:flex;align-items:center;gap:8px;font-size:13.5px;}
+  .rl-dot{flex:none;width:9px;height:9px;border-radius:50%;}
+  .rl-dot.good{background:var(--similar);}
+  .rl-dot.mid{background:#e6a817;}
+  .rl-dot.bad{background:var(--gap);}
+  .rl-dot.empty{background:var(--line);border:1px solid #b6ae94;}
+
+  .last-actions-panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:20px;display:flex;flex-direction:column;gap:14px;
+  }
+  .la-eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:700;margin-bottom:8px;}
+  .la-eyebrow.ai{color:#8a611a;}
+  .last-actions-panel p{margin:0;font-size:13.5px;line-height:1.55;}
+  .la-divider{height:1px;background:var(--line);}
+  .la-line{font-size:13px;margin:5px 0;display:flex;align-items:baseline;gap:8px;}
+  .la-tag{flex:none;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:999px;}
+  .la-tag.stop{color:#8a611a;background:#f1e2c9;}
+  .sess-fact{font-size:13px;margin:6px 0;display:flex;align-items:baseline;gap:7px;}
+  .sess-fact .sf-tag{flex:none;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--sub);}
+
+  /* Compact / Detailed toggle for Session History text */
+  .detail-toggle{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:14px;}
+  .detail-toggle .dt-hint{font-size:11.5px;color:var(--sub-light);}
+  .dt-group{display:flex;border-radius:999px;overflow:hidden;border:1px solid var(--line);}
+  .dt-btn{
+    border:none;background:var(--card);color:var(--sub);font-size:12.5px;font-weight:700;
+    padding:7px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .dt-btn + .dt-btn{border-left:1px solid var(--line);}
+  .dt-btn.active{background:var(--accent);color:var(--bg);}
+  #historyScreen .view-detailed{display:none;}
+  #historyScreen.detailed .view-compact{display:none;}
+  #historyScreen.detailed .view-detailed{display:block;}
+
+  .chart-legend{display:flex;gap:16px;align-items:center;margin:0 0 14px 0;font-size:12.5px;color:var(--sub);flex-wrap:wrap;}
+  .chart-legend .lg-item{display:flex;align-items:center;gap:6px;}
+  .chart-legend .lg-swatch{width:12px;height:12px;border-radius:3px;}
+
+  .trace-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;}
+  .trace-panel h3{margin:0 0 14px 0;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);}
+  .trace-row{margin-bottom:16px;}
+  .trace-row:last-child{margin-bottom:0;}
+  .trace-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .trace-label{font-weight:700;font-size:13.5px;}
+  .trace-total{font-size:12px;color:var(--sub);}
+  .trace-count-badge{
+    flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;background:var(--accent);color:var(--bg);border:2px solid var(--accent);
+  }
+  .trace-count-badge.zero{background:transparent;color:var(--sub);border-color:var(--line);}
+  .trace-spark{font-size:11px;color:var(--similar);margin-left:2px;}
+  .stack-bar{
+    height:20px;border-radius:4px;overflow:hidden;display:flex;background:var(--bg);
+    outline:1px solid var(--line);
+  }
+  .stack-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:white;font-weight:700;cursor:pointer;
+    border-right:2px solid var(--card);}
+  .stack-seg:last-child{border-right:none;}
+  .stack-seg.empty-seg{background:var(--line) !important;color:var(--sub);cursor:default;}
+  .stack-seg.reviewed-seg{background:var(--seen-bg) !important;color:var(--seen);cursor:default;}
+  .trace-note{font-size:11.5px;color:var(--sub);margin-top:5px;}
+  .trace-note b{color:var(--gap);}
+
+  .session-list-header{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);font-weight:700;margin:22px 0 10px 2px;}
+  .session-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;
+    display:flex;gap:14px;align-items:flex-start;
+  }
+  .session-card .sess-badge{
+    flex:none;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;color:white;
+  }
+  .session-card .sess-body{flex:1;}
+  .session-card .sess-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .session-card .sess-title{font-weight:700;font-size:14px;}
+  .session-card .sess-meta{font-size:12px;color:var(--sub);}
+  .session-card p.sess-recap{margin:8px 0;font-size:13.5px;}
+  .sess-deltas{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px 0;}
+  .sess-delta-chip{font-size:11.5px;background:var(--bg);border-radius:999px;padding:3px 9px;color:var(--ink);font-weight:600;}
+  .view-more-btn{
+    border:1px solid var(--line);background:var(--card);color:var(--accent);font-weight:700;font-size:12.5px;
+    padding:7px 13px;border-radius:8px;cursor:pointer;
+  }
+
+  /* --- Session Detail (historical, read-only) screen --- */
+  .detail-wrap{display:none;max-width:820px;margin:0 auto;padding:24px 28px 60px 28px;}
+  .detail-wrap.show{display:block;}
+  .back-link{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;margin-bottom:14px;display:inline-block;}
+  .detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .detail-header h1{font-size:19px;margin:0 0 4px 0;}
+  .readonly-badge{
+    background:var(--seen-bg);color:#5b5645;border:1px solid var(--line);font-size:11.5px;font-weight:700;
+    padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  }
+  .detail-recap{background:var(--card);border-radius:12px;padding:12px 14px;font-size:13.5px;margin-bottom:18px;}
+  .detail-section{margin-bottom:18px;}
+  .detail-section h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);margin:0 0 8px 0;}
+  .qchip-row{display:flex;flex-wrap:wrap;gap:8px;}
+
+  #detailScreen .view-time{display:none;}
+  #detailScreen.time-view .view-action{display:none;}
+  #detailScreen.time-view .view-time{display:block;}
+  .timeline{position:relative;padding-left:24px;margin-top:4px;}
+  .timeline::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--line);}
+  .tl-item{position:relative;padding-bottom:18px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-dot{position:absolute;left:-24px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--sub-light);}
+  .tl-dot.query{border-color:var(--accent);background:var(--accent);}
+  .tl-dot.save{border-color:var(--similar);background:var(--similar);}
+  .tl-dot.review{border-color:#e6a817;background:#e6a817;}
+  .tl-dot.end{border-color:var(--ink);background:var(--ink);}
+  .tl-time{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.02em;}
+  .tl-text{font-size:13.5px;margin-top:2px;line-height:1.5;}
+  .tl-text b{color:var(--accent);}
+  .qchip{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;}
+  .doc-list{display:flex;flex-direction:column;gap:8px;}
+  .doc-row{
+    display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;
+  }
+  .doc-row.saved{border-color:#b9d1ac;background:var(--similar-bg);}
+  .doc-row .doc-icon{flex:none;}
+  .detail-subgoals{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .mini-sg{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;}
+  .mini-sg .mini-sg-title{font-weight:700;margin-bottom:3px;}
+
+  /* --- New Project Setup screen --- */
+  .setup-wrap{display:none;max-width:900px;margin:0 auto;padding:40px 28px 80px 28px;}
+  .setup-wrap.show{display:block;}
+  .setup-hero{margin-bottom:40px;}
+  .setup-hero h1{font-size:42px;font-weight:800;margin:0 0 14px 0;letter-spacing:-0.01em;line-height:1.12;}
+  .setup-subtitle{font-size:15px;color:var(--sub);max-width:460px;line-height:1.65;margin:0;}
+
+  .setup-rows{border-top:1px solid var(--line);}
+  .setup-row{
+    display:grid;grid-template-columns:190px 1fr;gap:28px;
+    padding:22px 0;border-bottom:1px solid var(--line);align-items:start;
+  }
+  .setup-row-label{font-size:13.5px;font-weight:600;color:var(--ink);padding-top:2px;}
+  .setup-row-label.ai{color:#8a611a;}
+  .setup-row-content{font-size:14.5px;color:var(--ink);line-height:1.65;}
+  .setup-row-content.ai{font-style:italic;color:#5a4a26;}
+  .setup-actions{display:flex;justify-content:flex-start;margin:28px 0 4px 0;}
+  .generated-tag{
+    display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--similar);margin:40px 0 0 0;
+  }
+  .generated-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--similar);}
+  .setup-generated{margin-top:0;}
+  .setup-hint{font-size:12px;color:var(--sub);margin-top:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="wordmark">MINDS</span>
+    <span class="rule"></span>
+    <span class="tagline">Metacognitive Interface for Navigating Directions &amp; Scaffolding</span>
+  </div>
+  <div class="controls">
+    <button class="toggle-btn active" id="btnSetup" onclick="setScreen('setup')">🌱 New Project Setup</button>
+    <button class="toggle-btn" id="btnHistory" onclick="setScreen('history')">🕘 Session History (all sessions)</button>
+    <button class="toggle-btn" id="btnOverview" onclick="setScreen('overview')">📋 Current Overview (pre-SERP)</button>
+    <button class="toggle-btn" id="btnFresh" onclick="setScreen('fresh')">New session SERP</button>
+    <button class="toggle-btn" id="btnResume" onclick="setScreen('resumed')">Resumed SERP</button>
+    <button class="toggle-btn" id="btnDys" onclick="toggleDys()">Aa Dyslexia-friendly spacing</button>
+  </div>
+</div>
+
+<!-- ===================== NEW PROJECT SETUP ===================== -->
+<div class="setup-wrap show" id="setupScreen">
+
+  <div class="setup-hero">
+    <h1>Plan Your New Project</h1>
+    <p class="setup-subtitle">Auto-generate search directions after filling in your search goal, what you already know, and what you want to find out.</p>
+  </div>
+
+  <div class="setup-rows">
+    <div class="setup-row">
+      <div class="setup-row-label">Search goal</div>
+      <div class="setup-row-content">Explore academic literature on how green spaces affect human well-being</div>
+    </div>
+    <div class="setup-row">
+      <div class="setup-row-label">What I already know</div>
+      <div class="setup-row-content">Green spaces include parks, gardens, tree-lined streets, and conservation areas. Well-being can include physical, mental, and social dimensions.</div>
+    </div>
+    <div class="setup-row">
+      <div class="setup-row-label">What I want to find</div>
+      <div class="setup-row-content">How do green spaces affect different aspects of human well-being?</div>
+    </div>
+  </div>
+
+  <div class="setup-actions">
+    <button class="pill-btn primary">Generate search directions →</button>
+  </div>
+
+  <div class="setup-generated">
+    <div class="generated-tag"><span class="dot"></span> Generated from your answers above</div>
+
+    <div class="setup-rows">
+      <div class="setup-row">
+        <div class="setup-row-label">Search directions</div>
+        <div class="setup-row-content">
+          <div class="chip-row">
+            <div class="plan-chip"><span class="num">1</span> Physical health</div>
+            <div class="plan-chip"><span class="num">2</span> Mental / emotional well-being</div>
+            <div class="plan-chip"><span class="num">3</span> Social engagement</div>
+            <div class="plan-chip"><span class="num">4</span> Green Space</div>
+            <div class="plan-chip"><span class="num">5</span> Different populations / settings</div>
+            <div class="plan-chip" style="background:transparent;border-style:dashed;color:var(--sub);">+ add</div>
+          </div>
+          <div class="setup-hint">These become your sub-goals — the same 5 tracked throughout Session History, the Overview, and the SERP. Each can be edited, removed, or added to at any time, not just now.</div>
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="setup-row-label ai">💡 AI suggestion</div>
+        <div class="setup-row-content ai">To help build a diverse set of resources, consider exploring both health outcomes and different types of green spaces.</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="pill-btn primary" onclick="showSessionDetail(1)" style="margin-top:28px;">Start exploring → (see how Session 1 turned out)</button>
+
+  <p style="font-size:12px;color:var(--sub-light);margin-top:14px;">This is what creating the example project (shown in the other tabs) looked like on Day 1, before Session 1.</p>
+</div>
+<!-- ===================== /NEW PROJECT SETUP ===================== -->
+
+<!-- ===================== SESSION HISTORY (multi-session recap) ===================== -->
+<div class="history-wrap" id="historyScreen">
+
+  <div class="detail-toggle">
+    <span class="dt-hint">How much text?</span>
+    <div class="dt-group">
+      <button class="dt-btn active" id="btnHistCompact" onclick="toggleHistoryDetail('compact')">🔡 Compact</button>
+      <button class="dt-btn" id="btnHistDetailed" onclick="toggleHistoryDetail('detailed')">📖 Detailed</button>
+    </div>
+  </div>
+
+  <div class="history-row1">
+  <div class="history-row1-left">
+  <div class="ov-header">
+    <div class="eyebrow">All sessions on this task</div>
+    <h1>🎯 Explore academic literature on how green spaces affect human well-being</h1>
+    <div class="meta">Started Aug 5, 2026 · 3 sessions so far · Last active 2 days ago</div>
+  </div>
+
+  <div class="last-actions-panel">
+    <div>
+      <div class="la-eyebrow">🕒 Last actions (Session 3)</div>
+      <div class="view-compact">
+        <div class="la-line"><span class="la-tag">Saved</span> 3 mental/emotional · 2 green space</div>
+        <div class="la-line"><span class="la-tag">Reviewed</span> 2 social engagement · 1 populations/settings <i>(not saved)</i></div>
+        <div class="la-line"><span class="la-tag stop">Stopped</span> stuck on populations/settings</div>
+      </div>
+      <p class="view-detailed">In Session 3, you turned to <b>mental/emotional well-being</b> and saved 3 papers, plus 2 more comparing <b>green space</b> types. You also reviewed 2 <b>social engagement</b> results and opened a <b>populations/settings</b> paper, but didn't save either — then stopped, stuck on where to take that direction next.</p>
+    </div>
+    <div class="la-divider"></div>
+    <div>
+      <div class="la-eyebrow ai">💡 Suggested next step</div>
+      <div class="view-compact">
+        <div class="la-line"><b>Populations / settings</b> — least covered · rated 👎</div>
+      </div>
+      <p class="view-detailed">Coming back to a task usually means one of three things: picking up where you left off, moving to a related but different part of the same task, or starting something new entirely. <b>Populations / settings</b> has the least coverage and you rated it barely started yourself — that's the AI's top pick if you want to continue.</p>
+      <div class="next-step-actions">
+        <button class="ns-btn primary" onclick="setScreen('resumed')">↻ Continue: populations/settings →<span class="ns-sub">Pick up where you left off — AI's top pick</span></button>
+        <button class="ns-btn" onclick="setScreen('overview')">🧭 Try a different direction →<span class="ns-sub">See all 5 directions and choose one yourself</span></button>
+        <button class="ns-btn" onclick="setScreen('setup')">＋ Start a new project →<span class="ns-sub">A different search goal entirely</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overall-recap">
+    <div class="rc-eyebrow">↺ Overall recap — 3 sessions, 11 days</div>
+    <div class="recap-lines view-compact">
+      <div class="recap-line"><span class="rl-dot good"></span> <b>Mental/emotional</b> — well-covered</div>
+      <div class="recap-line"><span class="rl-dot good"></span> <b>Green space</b> — well-covered, big push in S2</div>
+      <div class="recap-line"><span class="rl-dot mid"></span> <b>Social engagement</b> — reviewed, not saved</div>
+      <div class="recap-line"><span class="rl-dot empty"></span> <b>Physical health</b> — not started</div>
+      <div class="recap-line"><span class="rl-dot bad"></span> <b>Populations/settings</b> ⚠ — barely started, flagged below</div>
+    </div>
+    <p class="view-detailed">Across 3 sessions over 11 days, you've built strong coverage of <b>mental/emotional well-being</b> and made your biggest gains on <b>green space</b>, especially during Session 2. <b>Social engagement</b> has been reviewed but nothing's been saved yet, and <b>physical health</b> hasn't come up in any session so far. <b>Different populations/settings</b> has barely been touched — you rated it 👎, which is why it's flagged below.</p>
+  </div>
+  </div>
+
+  <div class="history-row1-right">
+  <div class="trace-panel">
+    <h3>🗺️ Progress by search direction, traced across sessions</h3>
+    <div class="chart-legend">
+      <span>Saved items, coloured by the session they were saved in:</span>
+      <div class="lg-item"><div class="lg-swatch" style="background:var(--sess-3);"></div> Session 03</div>
+      <div class="lg-item"><div class="lg-swatch" style="background:var(--sess-2);"></div> Session 02</div>
+      <div class="lg-item"><div class="lg-swatch" style="background:var(--sess-1);"></div> Session 01</div>
+    </div>
+
+    <div class="trace-row">
+      <div class="trace-top">
+        <span class="trace-count-badge">5</span>
+        <span class="trace-label">Mental / emotional well-being <span class="trace-spark" title="Active this session">✦</span></span>
+      </div>
+      <div class="stack-bar">
+        <div class="stack-seg" style="background:var(--sess-3);flex:3;" title="Session 3: +3 saved">+3</div>
+        <div class="stack-seg" style="background:var(--sess-2);flex:1;" title="Session 2: +1 saved">+1</div>
+        <div class="stack-seg" style="background:var(--sess-1);flex:1;" title="Session 1: +1 saved">+1</div>
+      </div>
+      <div class="trace-note">
+        <span class="view-compact">Slow start (S1, S2) → tripled in S3.</span>
+        <span class="view-detailed">Started slow — one paper each in Sessions 1 and 2 — then a focused push in Session 3 tripled it.</span>
+      </div>
+    </div>
+
+    <div class="trace-row">
+      <div class="trace-top">
+        <span class="trace-count-badge">7</span>
+        <span class="trace-label">Green Space <span class="trace-spark" title="Active this session">✦</span></span>
+      </div>
+      <div class="stack-bar">
+        <div class="stack-seg" style="background:var(--sess-3);flex:2;" title="Session 3: +2 saved">+2</div>
+        <div class="stack-seg" style="background:var(--sess-2);flex:4;" title="Session 2: +4 saved">+4</div>
+        <div class="stack-seg" style="background:var(--sess-1);flex:1;" title="Session 1: +1 saved">+1</div>
+      </div>
+      <div class="trace-note">
+        <span class="view-compact">Biggest push: S2 (+4). <span class="back-link" style="margin:0;" onclick="showSessionDetail(2)">See Session 2 →</span></span>
+        <span class="view-detailed">The biggest push came in Session 2, when comparing green-space types took off; Session 3 added two more. <span class="back-link" style="margin:0;" onclick="showSessionDetail(2)">See what happened in Session 2 →</span></span>
+      </div>
+    </div>
+
+    <div class="trace-row">
+      <div class="trace-top">
+        <span class="trace-count-badge zero">0</span>
+        <span class="trace-label">Physical Health</span>
+      </div>
+      <div class="stack-bar">
+        <div class="stack-seg empty-seg" style="flex:1;">No Session Record</div>
+      </div>
+      <div class="trace-note">
+        <span class="view-compact">No activity yet — hasn't come up in any session.</span>
+        <span class="view-detailed">This direction hasn't come up in any session yet — no results have been shown or reviewed for it so far.</span>
+      </div>
+    </div>
+
+    <div class="trace-row">
+      <div class="trace-top">
+        <span class="trace-count-badge zero">0</span>
+        <span class="trace-label">Social engagement <span class="trace-spark" title="Active this session">✦</span></span>
+      </div>
+      <div class="stack-bar">
+        <div class="stack-seg reviewed-seg" style="flex:1;">0 Saved - 5 Reviewed</div>
+      </div>
+      <div class="trace-note">
+        <span class="view-compact">5 reviewed, 0 saved — worth a closer look.</span>
+        <span class="view-detailed">5 results have been reviewed across sessions, but none saved yet — worth a closer look, or maybe this direction isn't panning out.</span>
+      </div>
+    </div>
+
+    <div class="trace-row">
+      <div class="trace-top">
+        <span class="trace-count-badge zero">0</span>
+        <span class="trace-label">Different populations / settings ⚠ <span class="trace-spark" title="Active this session">✦</span></span>
+      </div>
+      <div class="stack-bar">
+        <div class="stack-seg empty-seg" style="flex:1;">0 saved — only 2 results ever surfaced here</div>
+      </div>
+      <div class="trace-note">
+        <span class="view-compact">1 opened in S3, not saved. <b>Likely a real gap</b> — matches your 👎 rating.</span>
+        <span class="view-detailed">One result was opened in Session 3 but not saved. <b>A likely real gap, not just an oversight</b> — matches your own 👎 rating, and the AI suggestion at setup didn't happen to call this direction out either.</span>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+  <!-- /history-row1 -->
+
+  <div class="history-row2">
+  <div class="session-list-header">Sessions (most recent first)</div>
+  <div class="session-hint">
+    <span class="view-compact">S1, S2 = read-only snapshot. S3 (ongoing) = live Overview.</span>
+    <span class="view-detailed">Closed sessions (S1, S2) open a read-only snapshot. Your ongoing session (S3) opens the live, editable Overview instead — there's nothing to freeze yet.</span>
+  </div>
+
+  <div class="session-cards-grid">
+
+  <div class="session-card">
+    <div class="sess-badge" style="background:var(--sess-3);">S3</div>
+    <div class="sess-body">
+      <div class="sess-top"><span class="sess-title">Session 3 — Aug 16, 2026</span><span class="sess-live-badge">🟢 Ongoing</span></div>
+      <div class="sess-meta">31 min so far · 2 days ago · 7-day gap since S2</div>
+      <div class="view-compact">
+        <div class="sess-fact"><span class="sf-tag">Saved</span> 3 mental/emotional · 2 green space</div>
+        <div class="sess-fact"><span class="sf-tag">Reviewed</span> 2 social engagement · 1 populations/settings <i>(not saved)</i></div>
+      </div>
+      <p class="view-detailed" style="margin:8px 0;font-size:13.5px;">Turned attention to mental/emotional well-being this session — saved 3 papers in a focused push, plus 2 more comparing green space types. Also reviewed a couple of social engagement results and opened a populations/settings paper, but didn't save either.</p>
+      <div class="sess-deltas">
+        <span class="sess-delta-chip">+5 saved</span>
+        <span class="sess-delta-chip">4 search directions touched</span>
+        <span class="sess-delta-chip" id="s3StopChip">stopped: 🤔 stuck (on populations/settings)</span>
+      </div>
+      <button class="pill-btn primary" onclick="setScreen('overview')">↻ Continue this session →</button>
+    </div>
+  </div>
+
+  <div class="session-card">
+    <div class="sess-badge" style="background:var(--sess-2);">S2</div>
+    <div class="sess-body">
+      <div class="sess-top"><span class="sess-title">Session 2 — Aug 9, 2026</span></div>
+      <div class="sess-meta">27 min · 4-day gap since S1</div>
+      <div class="view-compact">
+        <div class="sess-fact"><span class="sf-tag">Saved</span> 4 green space · 1 mental/emotional</div>
+        <div class="sess-fact"><span class="sf-tag">Reviewed</span> 2 social engagement <i>(not saved)</i></div>
+      </div>
+      <p class="view-detailed" style="margin:8px 0;font-size:13.5px;">Made big gains on green space this session — saved 4 papers comparing different types — plus one more mental/emotional paper. Also reviewed two social engagement results without saving either.</p>
+      <div class="sess-deltas">
+        <span class="sess-delta-chip">+5 saved</span>
+        <span class="sess-delta-chip">3 search directions touched</span>
+        <span class="sess-delta-chip">stopped: ✅ done for now</span>
+      </div>
+      <button class="view-more-btn" onclick="showSessionDetail(2)">View this session in full →</button>
+    </div>
+  </div>
+
+  <div class="session-card">
+    <div class="sess-badge" style="background:var(--sess-1);">S1</div>
+    <div class="sess-body">
+      <div class="sess-top"><span class="sess-title">Session 1 — Aug 5, 2026</span></div>
+      <div class="sess-meta">16 min · task started here</div>
+      <div class="view-compact">
+        <div class="sess-fact"><span class="sf-tag">Saved</span> 1 mental/emotional · 1 green space</div>
+        <div class="sess-fact"><span class="sf-tag">Reviewed</span> 1 social engagement <i>(not saved)</i></div>
+      </div>
+      <p class="view-detailed" style="margin:8px 0;font-size:13.5px;">First session — broad search on "green spaces and well-being." Saved one mental/emotional paper and one comparing green space types; also opened a social engagement paper but didn't save it.</p>
+      <div class="sess-deltas">
+        <span class="sess-delta-chip">+2 saved</span>
+        <span class="sess-delta-chip">3 search directions touched</span>
+        <span class="sess-delta-chip">stopped: 💤 taking a break</span>
+      </div>
+      <button class="view-more-btn" onclick="showSessionDetail(1)">View this session in full →</button>
+    </div>
+  </div>
+  </div>
+  </div>
+</div>
+<!-- ===================== /SESSION HISTORY ===================== -->
+
+<!-- ===================== SESSION DETAIL (historical, read-only) ===================== -->
+<div class="detail-wrap" id="detailScreen">
+  <span class="back-link" onclick="setScreen('history')">← Back to Session History</span>
+  <div class="detail-header">
+    <div>
+      <h1 id="detailTitle">Session 2 — Aug 9, 2026</h1>
+      <div class="meta" id="detailMeta">27 minutes · 4-day gap since Session 1</div>
+    </div>
+    <div class="readonly-badge">🔒 Read-only snapshot</div>
+  </div>
+  <div class="detail-recap" id="detailRecap">Made big gains on green space this session — saved 4 papers comparing different types — plus one more mental/emotional paper. Also reviewed two social engagement results without saving either.</div>
+
+  <div class="detail-toggle">
+    <span class="dt-hint">View as:</span>
+    <div class="dt-group">
+      <button class="dt-btn active" id="btnDetailAction" onclick="toggleDetailView('action')">📋 Action</button>
+      <button class="dt-btn" id="btnDetailTime" onclick="toggleDetailView('time')">🕐 Time</button>
+    </div>
+  </div>
+
+  <div class="view-action">
+  <div class="detail-section">
+    <h3>🔎 Queries issued this session</h3>
+    <div class="qchip-row" id="detailQueries">
+      <div class="qchip">green space types comparison well-being</div>
+      <div class="qchip">green space mental health stress</div>
+      <div class="qchip">community green space social ties</div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>📄 Opened</h3>
+    <div class="doc-list" id="detailOpened">
+      <div class="doc-row"><span class="doc-icon">○</span> Green spaces around schools and children's socio-emotional development</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Comparing park, forest, and community garden exposure effects on well-being</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Blue space versus green space: differential effects on restoration</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Pocket parks and micro-green spaces in dense urban environments</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Street trees and canopy cover as a distinct green space category</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Shared green space use and neighbourhood social ties (opened, not saved)</div>
+      <div class="doc-row"><span class="doc-icon">○</span> Green space as a setting for intergenerational contact (opened, not saved)</div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>💾 Saved</h3>
+    <div class="doc-list" id="detailSaved">
+      <div class="doc-row saved"><span class="doc-icon">✓</span> Green spaces around schools and children's socio-emotional development — added to <b>Mental / emotional well-being</b></div>
+      <div class="doc-row saved"><span class="doc-icon">✓</span> Comparing park, forest, and community garden exposure effects on well-being — added to <b>Green Space</b></div>
+      <div class="doc-row saved"><span class="doc-icon">✓</span> Blue space versus green space: differential effects on restoration — added to <b>Green Space</b></div>
+      <div class="doc-row saved"><span class="doc-icon">✓</span> Pocket parks and micro-green spaces in dense urban environments — added to <b>Green Space</b></div>
+      <div class="doc-row saved"><span class="doc-icon">✓</span> Street trees and canopy cover as a distinct green space category — added to <b>Green Space</b></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>🗺️ Search-direction state at the end of this session</h3>
+    <div class="detail-subgoals" id="detailSubgoals">
+      <div class="mini-sg"><div class="mini-sg-title">① Physical health</div>Not started</div>
+      <div class="mini-sg"><div class="mini-sg-title">② Mental / emotional well-being</div>2/4 shown saved · 👍 well-covered</div>
+      <div class="mini-sg"><div class="mini-sg-title">③ Social engagement</div>0/4 shown saved · 😐 some, but thin</div>
+      <div class="mini-sg"><div class="mini-sg-title">④ Green Space</div>5/6 shown saved · 👍 well-covered</div>
+      <div class="mini-sg"><div class="mini-sg-title">⑤ Different populations / settings</div>Not started</div>
+    </div>
+  </div>
+  </div>
+
+  <div class="detail-section view-time">
+    <h3>🕐 What happened, in order</h3>
+    <div class="timeline" id="detailTimeline">
+      <div class="tl-item"><div class="tl-dot query"></div><div class="tl-time">10:00 AM</div><div class="tl-text">🔎 Searched: <i>"green space types comparison well-being"</i></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:02 AM</div><div class="tl-text">○ Opened: Comparing park, forest, and community garden exposure effects on well-being</div></div>
+      <div class="tl-item"><div class="tl-dot save"></div><div class="tl-time">10:04 AM</div><div class="tl-text">✓ Saved → <b>Green Space</b></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:06 AM</div><div class="tl-text">○ Opened: Blue space versus green space: differential effects on restoration</div></div>
+      <div class="tl-item"><div class="tl-dot save"></div><div class="tl-time">10:08 AM</div><div class="tl-text">✓ Saved → <b>Green Space</b></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:10 AM</div><div class="tl-text">○ Opened: Pocket parks and micro-green spaces in dense urban environments</div></div>
+      <div class="tl-item"><div class="tl-dot save"></div><div class="tl-time">10:12 AM</div><div class="tl-text">✓ Saved → <b>Green Space</b></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:14 AM</div><div class="tl-text">○ Opened: Street trees and canopy cover as a distinct green space category</div></div>
+      <div class="tl-item"><div class="tl-dot save"></div><div class="tl-time">10:16 AM</div><div class="tl-text">✓ Saved → <b>Green Space</b></div></div>
+      <div class="tl-item"><div class="tl-dot query"></div><div class="tl-time">10:18 AM</div><div class="tl-text">🔎 Searched: <i>"green space mental health stress"</i></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:20 AM</div><div class="tl-text">○ Opened: Green spaces around schools and children's socio-emotional development</div></div>
+      <div class="tl-item"><div class="tl-dot save"></div><div class="tl-time">10:22 AM</div><div class="tl-text">✓ Saved → <b>Mental / emotional well-being</b></div></div>
+      <div class="tl-item"><div class="tl-dot query"></div><div class="tl-time">10:24 AM</div><div class="tl-text">🔎 Searched: <i>"community green space social ties"</i></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:25 AM</div><div class="tl-text">○ Opened: Shared green space use and neighbourhood social ties</div></div>
+      <div class="tl-item"><div class="tl-dot review"></div><div class="tl-time">10:26 AM</div><div class="tl-text">👁 Reviewed, not saved — <b>Social engagement</b></div></div>
+      <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">10:27 AM</div><div class="tl-text">○ Opened: Green space as a setting for intergenerational contact</div></div>
+      <div class="tl-item"><div class="tl-dot review"></div><div class="tl-time">10:27 AM</div><div class="tl-text">👁 Reviewed, not saved — <b>Social engagement</b></div></div>
+      <div class="tl-item"><div class="tl-dot end"></div><div class="tl-time">10:27 AM</div><div class="tl-text">🏁 Session ended — stopped: ✅ done for now</div></div>
+    </div>
+  </div>
+</div>
+<!-- ===================== /SESSION DETAIL ===================== -->
+
+<!-- ===================== SESSION OVERVIEW (pre-SERP) ===================== -->
+<div class="overview-wrap" id="overviewScreen">
+  <span class="back-link" onclick="setScreen('history')">← All sessions</span>
+  <div class="ov-header">
+    <div class="eyebrow">Before you search — current, live overview (Session 3, ongoing)</div>
+    <h1>🎯 Explore academic literature on how green spaces affect human well-being</h1>
+    <div class="meta">Task started 11 days ago · Session 3 · Last active 2 days ago</div>
+  </div>
+
+  <div class="ov-cta-row">
+    <div class="hint">💡 "Different populations / settings" has the least coverage and you rated it barely started — the AI's top pick if you want to continue. Prefer a different direction? Pick any card below. Or start fresh with a new project.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="pill-btn primary" onclick="setScreen('resumed')">↻ Continue on this direction →</button>
+      <button class="pill-btn ghost" onclick="setScreen('setup')">＋ Start a new project</button>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px;">
+    <h3 style="margin-bottom:8px;">ℹ️ What this ring shows (and doesn't)</h3>
+    <div class="legend" style="flex-direction:row;flex-wrap:wrap;gap:16px;margin-bottom:8px;">
+      <div class="legend-item"><div class="legend-swatch" style="background:#0f9d78;"></div> Saved</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#e6a817;"></div> Opened, not saved</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#dcd6c4;"></div> Shown, not yet opened</div>
+    </div>
+    <div style="font-size:12.5px;color:var(--sub);">The ring is <b>your triage progress on results shown so far for this search direction</b> — never a fraction of the whole database (214 total hits for this query, most never shown to you), and not a claim that you've "understood" the topic. Since this task is about collecting a diverse set of sources rather than reading them yet, the rating below is about how well-covered a direction feels, not how well you understand it.</div>
+  </div>
+
+  <div class="subgoal-grid">
+
+    <div class="subgoal-card not-started">
+      <div class="ring ring-empty">
+        <div class="hole">—</div>
+      </div>
+      <div class="sg-body">
+        <div class="sg-top"><span class="sg-title">① Physical health</span></div>
+        <div class="sg-counts">Not shown yet — this direction hasn't come up in any session so far.</div>
+        <div class="rate-row">
+          <button class="rate-btn">👍 Well-covered</button>
+          <button class="rate-btn">😐 Some, but thin</button>
+          <button class="rate-btn">👎 Barely started</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subgoal-card">
+      <div class="ring" style="background:conic-gradient(#0f9d78 0% 62.5%, #e6a817 62.5% 75%, #dcd6c4 75% 100%);">
+        <div class="hole">5/8</div>
+      </div>
+      <div class="sg-body">
+        <div class="sg-top"><span class="sg-title">② Mental / emotional well-being</span></div>
+        <div class="sg-counts">5 saved · 1 opened, not saved · 2 not yet opened <br>— 8 results shown for this direction so far</div>
+        <div class="rate-row">
+          <button class="rate-btn active good">👍 Well-covered</button>
+          <button class="rate-btn">😐 Some, but thin</button>
+          <button class="rate-btn">👎 Barely started</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subgoal-card">
+      <div class="ring" style="background:conic-gradient(#e6a817 0% 83.3%, #dcd6c4 83.3% 100%);">
+        <div class="hole">0/6</div>
+      </div>
+      <div class="sg-body">
+        <div class="sg-top"><span class="sg-title">③ Social engagement</span></div>
+        <div class="sg-counts">0 saved · 5 opened, not saved · 1 not yet opened <br>— 6 results shown for this direction so far</div>
+        <div class="rate-row">
+          <button class="rate-btn">👍 Well-covered</button>
+          <button class="rate-btn active mid">😐 Some, but thin</button>
+          <button class="rate-btn">👎 Barely started</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subgoal-card">
+      <div class="ring" style="background:conic-gradient(#0f9d78 0% 77.8%, #e6a817 77.8% 88.9%, #dcd6c4 88.9% 100%);">
+        <div class="hole">7/9</div>
+      </div>
+      <div class="sg-body">
+        <div class="sg-top"><span class="sg-title">④ Green Space</span></div>
+        <div class="sg-counts">7 saved · 1 opened, not saved · 1 not yet opened <br>— 9 results shown for this direction so far</div>
+        <div class="rate-row">
+          <button class="rate-btn active good">👍 Well-covered</button>
+          <button class="rate-btn">😐 Some, but thin</button>
+          <button class="rate-btn">👎 Barely started</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subgoal-card flag-unclear">
+      <div class="ring" style="background:conic-gradient(#e6a817 0% 50%, #dcd6c4 50% 100%);">
+        <div class="hole">0/2</div>
+      </div>
+      <div class="sg-body">
+        <div class="sg-top"><span class="sg-title">⑤ Different populations / settings</span></div>
+        <div class="sg-counts">0 saved · 1 opened, not saved · 1 not yet opened <br>— 2 results shown for this direction so far</div>
+        <div class="rate-row">
+          <button class="rate-btn">👍 Well-covered</button>
+          <button class="rate-btn">😐 Some, but thin</button>
+          <button class="rate-btn active">👎 Barely started</button>
+        </div>
+        <div class="sg-note">⚠ You rated this yourself last session — that self-rating, not the ring, is why it's flagged as today's priority</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="leads-mini">
+    👀 <b>1 unopened lead</b> from a past session (a result you saw but never opened, under "Green Space") — <a href="#" style="color:var(--accent);font-weight:600;">show it</a>
+  </div>
+</div>
+<!-- ===================== /SESSION OVERVIEW ===================== -->
+
+<div class="searchbar" id="searchBar">
+  <div class="searchbox">
+    <span class="icon">🔎</span>
+    <input value="green space types well-being comparison" readonly>
+    <span class="icon">⏎</span>
+  </div>
+</div>
+
+<div class="layout" id="serpLayout">
+  <div class="main-col">
+
+    <!-- Session Recap Capsule -->
+    <div class="recap" id="recapCard">
+      <div class="icon-badge">↺</div>
+      <div class="recap-body">
+        <div class="recap-title">Welcome back — here's where you left off</div>
+        <p>Last time (2 days ago) you were focused on <b>mental/emotional well-being</b> and <b>green space</b> — saved 5 papers between them. You rated <b>different populations / settings</b> 👎 barely started before stopping — that's why it's highlighted below.</p>
+        <div class="lead-tag">👀 1 result you saw but didn't open — want a reminder?</div>
+        <div class="recap-actions">
+          <button class="pill-btn primary" onclick="setScreen('overview')">See current overview</button>
+          <button class="pill-btn ghost" onclick="setScreen('history')">See all 3 sessions</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goal & Plan Strip -->
+    <div class="plan-strip">
+      <div class="goal-row">
+        <span class="g-icon">🎯</span>
+        <div class="goal-text">Explore academic literature on how green spaces affect human well-being</div>
+        <span class="edit-pencil">✏️ edit</span>
+      </div>
+      <div class="chip-row">
+        <div class="plan-chip" style="background:transparent;color:var(--sub);"><span class="num" style="background:var(--sub-light);">1</span> Physical health <span title="Not started — nothing to rate yet">—</span></div>
+        <div class="plan-chip"><span class="num">2</span> Mental / emotional well-being <span title="Tap to rate: currently Well-covered">👍</span></div>
+        <div class="plan-chip"><span class="num">3</span> Social engagement <span title="Tap to rate: currently Some, but thin">😐</span></div>
+        <div class="plan-chip"><span class="num">4</span> Green Space <span title="Tap to rate: currently Well-covered">👍</span></div>
+        <div class="plan-chip" style="background:var(--gap-bg);color:var(--gap);border-color:#e8c58f;"><span class="num" style="background:var(--gap);">5</span> Different populations / settings <span title="Tap to rate: currently Barely started">👎</span></div>
+        <div class="plan-chip" style="background:transparent;border-style:dashed;color:var(--sub);">+ add</div>
+      </div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:8px;">Tap the 👍/😐/👎 on any chip to rate how well-covered that direction feels — same rating shown on the Session Overview screen.</div>
+    </div>
+
+    <div class="section-label">Results (4 of 214)</div>
+
+    <!-- Result cards -->
+    <div class="result-card">
+      <div class="r-glyph">📄</div>
+      <div class="result-body">
+        <div class="result-top">
+          <div>
+            <p class="r-title">Green space access and well-being across different population groups: a comparative review</p>
+            <p class="r-meta">Rigolon, A., Browning, M. &amp; Jennings, V. · Health &amp; Place, 2021</p>
+          </div>
+          <div class="badge gap">◐ Fills your "populations/settings" gap</div>
+        </div>
+        <p class="r-snippet">Compares green space access and well-being outcomes across age groups, income levels, and cultural backgrounds — a population dimension not yet reflected in your saved sources…</p>
+        <div class="why-match">
+          <div class="why-match-label">Why this may help your search</div>
+          <div class="kw-row tier-excellent" onclick="toggleDirectionSave(this,'populations')">
+            <span class="kw-pct">Excellent</span><span class="kw-text">⑤ Populations / settings</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d1','populations')">?</span>
+          </div>
+          <div class="kw-row tier-good" onclick="toggleDirectionSave(this,'green')">
+            <span class="kw-pct">Good</span><span class="kw-text">④ Green Space</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d1','green')">?</span>
+          </div>
+          <div class="kw-row tier-possible" onclick="toggleDirectionSave(this,'mental')">
+            <span class="kw-pct">Possible</span><span class="kw-text">② Mental / emotional well-being</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d1','mental')">?</span>
+          </div>
+        </div>
+      </div>
+      <div class="r-actions">
+        <div class="icon-btn">💾</div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="r-glyph">📄</div>
+      <div class="result-body">
+        <div class="result-top">
+          <div>
+            <p class="r-title">Tree-lined streets and pedestrian stress recovery: an experimental study</p>
+            <p class="r-meta">Jiang, B., Chang, C.-Y. &amp; Sullivan, W.C. · Journal of Environmental Psychology, 2021</p>
+          </div>
+          <div class="badge new">● New</div>
+        </div>
+        <p class="r-snippet">Uses physiological stress markers to compare recovery rates for pedestrians walking on tree-lined versus treeless streets…</p>
+        <div class="why-match">
+          <div class="why-match-label">Why this may help your search</div>
+          <div class="kw-row tier-excellent" onclick="toggleDirectionSave(this,'green')">
+            <span class="kw-pct">Excellent</span><span class="kw-text">④ Green Space</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d2','green')">?</span>
+          </div>
+          <div class="kw-row tier-good" onclick="toggleDirectionSave(this,'physical')">
+            <span class="kw-pct">Good</span><span class="kw-text">① Physical health</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d2','physical')">?</span>
+          </div>
+          <div class="kw-row tier-possible" onclick="toggleDirectionSave(this,'mental')">
+            <span class="kw-pct">Possible</span><span class="kw-text">② Mental / emotional well-being</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d2','mental')">?</span>
+          </div>
+        </div>
+      </div>
+      <div class="r-actions">
+        <div class="icon-btn">💾</div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="r-glyph">📄</div>
+      <div class="result-body">
+        <div class="result-top">
+          <div>
+            <p class="r-title">Green space exposure and reduced anxiety symptoms: a systematic review</p>
+            <p class="r-meta">Twohig-Bennett, C. &amp; Jones, A. · Environmental Research, 2018</p>
+          </div>
+          <div class="badge similar">✓ Similar to a saved paper</div>
+        </div>
+        <p class="r-snippet">Synthesizes evidence linking green space exposure to reduced anxiety symptoms, complementing your existing saves on nature-based mental health interventions…</p>
+        <div class="why-match">
+          <div class="why-match-label">Why this may help your search</div>
+          <div class="kw-row tier-excellent" onclick="toggleDirectionSave(this,'mental')">
+            <span class="kw-pct">Excellent</span><span class="kw-text">② Mental / emotional well-being</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d3','mental')">?</span>
+          </div>
+          <div class="kw-row tier-excellent" onclick="toggleDirectionSave(this,'green')">
+            <span class="kw-pct">Excellent</span><span class="kw-text">④ Green Space</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d3','green')">?</span>
+          </div>
+          <div class="kw-row tier-possible" onclick="toggleDirectionSave(this,'physical')">
+            <span class="kw-pct">Possible</span><span class="kw-text">① Physical health</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d3','physical')">?</span>
+          </div>
+        </div>
+      </div>
+      <div class="r-actions">
+        <div class="icon-btn">💾</div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="r-glyph">📄</div>
+      <div class="result-body">
+        <div class="result-top">
+          <div>
+            <p class="r-title">Green spaces around schools and children's socio-emotional development</p>
+            <p class="r-meta">Amicone, G., Petruccelli, I. &amp; De Dominicis, S. · Frontiers in Psychology, 2018</p>
+          </div>
+          <div class="badge seen">◔ You saved this in an earlier session</div>
+        </div>
+        <p class="r-snippet">Links access to green space around schools with improved emotional regulation and social skills in children, building on the school-based studies you've already saved…</p>
+        <div class="why-match">
+          <div class="why-match-label">Why this may help your search</div>
+          <div class="kw-row tier-excellent kw-saved" onclick="toggleDirectionSave(this,'mental')">
+            <span class="kw-pct">Excellent</span><span class="kw-text">② Mental / emotional well-being</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d4','mental')">?</span>
+          </div>
+          <div class="kw-row tier-good" onclick="toggleDirectionSave(this,'social')">
+            <span class="kw-pct">Good</span><span class="kw-text">③ Social engagement</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d4','social')">?</span>
+          </div>
+          <div class="kw-row tier-possible" onclick="toggleDirectionSave(this,'populations')">
+            <span class="kw-pct">Possible</span><span class="kw-text">⑤ Populations / settings</span><span class="kw-save-mark">✓ saved</span><span class="kw-why-btn" onclick="openWhyModal(event,'d4','populations')">?</span>
+          </div>
+        </div>
+      </div>
+      <div class="r-actions">
+        <div class="icon-btn">💾</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="side-col">
+    <div class="panel">
+      <h3>🗺️ Coverage map <span style="text-transform:none;letter-spacing:0;font-weight:400;">(same 5 directions as your plan)</span></h3>
+      <div class="theme-row">
+        <div class="theme-dot empty" id="covDotPhysical"></div>
+        <div class="theme-label">① Physical health</div>
+        <div class="theme-count" id="covCountPhysical">not started</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-dot explored" id="covDotMental"></div>
+        <div class="theme-label">② Mental / emotional</div>
+        <div class="theme-count" id="covCountMental">5 saved</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-dot partial" id="covDotSocial"></div>
+        <div class="theme-label">③ Social engagement</div>
+        <div class="theme-count" id="covCountSocial">0 saved</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-dot explored" id="covDotGreen"></div>
+        <div class="theme-label">④ Green Space</div>
+        <div class="theme-count" id="covCountGreen">7 saved</div>
+      </div>
+      <div class="theme-row">
+        <div class="theme-dot partial" id="covDotPopulations"></div>
+        <div class="theme-label">⑤ Populations / settings ⚠</div>
+        <div class="theme-count" id="covCountPopulations">0 saved</div>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:2px;">Dot colour = your triage progress (green=mostly saved, amber=some opened, grey=not yet opened) for results shown so far — not total literature. ⚠ = you rated it barely-started yourself. Tap a category label below any result to save it into that direction — the count above updates live. <strong>Category meanings:</strong> Excellent = strong signal (0.85+); Good = moderate (0.65–0.84); Possible = exploratory (0.40–0.64); thresholds to be validated in user testing.</div>
+    </div>
+
+    <div class="panel">
+      <h3>🏷️ What the badges mean</h3>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--new-bg);border:1px solid var(--new);"></div> New — not seen before</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--seen-bg);border:1px solid var(--seen);"></div> Seen/saved in a past session</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--similar-bg);border:1px solid var(--similar);"></div> Similar to a saved paper</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--gap-bg);border:1px solid var(--gap);"></div> Fills a gap in your directions</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--dup-bg);border:1px solid var(--dup);"></div> Possible duplicate</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>📊 What the category label next to each direction means</h3>
+      <div style="font-size:12.5px;color:var(--sub);">How confident the AI is, from reading the abstract, that this result actually belongs to that search direction — not how important it is to you. Filled = high confidence, soft = moderate, plain grey text = low/likely tangential. <b>Tap one</b> to save this result into that direction — the Coverage map above updates immediately.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="note">
+  <b>Wireframe only</b> — illustrates layout and content, not final visual design. Persona: first-year Geography student researching green spaces and well-being, building a diverse source set rather than reading in depth right now. Nine scaffold components across four levels: <b>New Project Setup</b> (search goal / prior knowledge / what to find → generated search directions + one AI suggestion), <b>Session History</b> (overall recap + cross-session progress trace + session list), <b>Session Detail</b> (read-only snapshot of a past session — what was searched/opened/saved), the live <b>Session Overview</b> (coverage per direction, with tap-to-rate), the <b>Goal &amp; Plan Strip</b> and <b>Coverage Map</b> (same 5 directions, two more views of the same state), per-result <b>Evaluation Badges</b>, the <b>Session Recap Capsule</b>, and the <b>Check-out Chip</b>. <br><b>Confidence category system:</b> Replaces percentages to reduce cognitive load. <b>Excellent</b> = strong signal (0.85+); <b>Good</b> = moderate (0.65–0.84); <b>Possible</b> = exploratory (0.40–0.64); <b>No Match</b> = weak/irrelevant (&lt;0.40). Thresholds are draft values to be validated through user testing.
+</footer>
+
+<div class="checkout" id="checkoutToast">
+  <div class="checkout-active" id="checkoutActive">
+    <span class="label">Stopping for now?</span>
+    <button onclick="checkOut('done')">✅ Done</button>
+    <button onclick="checkOut('break')">💤 Break</button>
+    <button onclick="checkOut('stuck')">🤔 Stuck</button>
+    <button onclick="checkOut('ask')">👥 Ask someone</button>
+  </div>
+  <div class="checkout-paused" id="checkoutPaused">
+    <span class="label">🕘 Paused — we'll remind you where you left off</span>
+    <button onclick="resumeCheckout()">↺ Resume options</button>
+  </div>
+</div>
+
+<!-- "Ask someone" hand-off: distributed cognition (Hutchins 1995) extends cognition
+     through other PEOPLE, not just artifacts — so this shares a human-readable recap,
+     not raw state, letting a second person get oriented without reconstructing it themselves. -->
+<div class="share-modal-backdrop" id="shareModal">
+  <div class="share-modal">
+    <div class="share-modal-header">
+      <h3>👥 Share this session</h3>
+      <span class="back-link" style="margin:0;" onclick="closeShareModal()">✕ Close</span>
+    </div>
+    <p class="share-modal-sub">A plain-language summary — easier for someone else to pick up than raw queries or a saved-items list.</p>
+    <div class="share-modal-body" id="shareModalBody">
+      Explore academic literature on how green spaces affect human well-being — 3 sessions, 11 days in.<br><br>
+      Well-covered: <b>mental/emotional well-being</b>, <b>green space</b>.<br>
+      Reviewed but not saved: <b>social engagement</b>.<br>
+      Not started: <b>physical health</b>.<br>
+      Flagged (rated barely started): <b>different populations / settings</b> ⚠<br><br>
+      Stuck on: how to approach "different populations / settings" — could use a second opinion.
+    </div>
+    <div class="share-modal-actions">
+      <button class="pill-btn primary" onclick="mockCopySummary()">📋 Copy summary</button>
+      <button class="pill-btn ghost" onclick="closeShareModal()">Close</button>
+    </div>
+    <div class="share-modal-note" id="shareCopyNote"></div>
+  </div>
+</div>
+
+<!-- "Why this score?" modal: makes each AI confidence tag scrutable, not just visible —
+     LVSIP's Scrutable principle (Hoeber, CHIIR '25). Tapping a tag saves it; tapping the
+     separate ? explains it, so the two actions (act on it / question it) never collide. -->
+<div class="share-modal-backdrop" id="whyModal">
+  <div class="share-modal" style="max-width:440px;">
+    <div class="share-modal-header">
+      <h3>🤖 Why this score?</h3>
+      <span class="back-link" style="margin:0;" onclick="closeWhyModal()">✕ Close</span>
+    </div>
+    <div class="why-modal-eyebrow" id="whyModalDoc"></div>
+    <div class="why-modal-title" id="whyModalTitle"></div>
+    <div class="share-modal-body" id="whyModalBody"></div>
+    <div class="share-modal-actions">
+      <button class="pill-btn ghost" onclick="closeWhyModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Canned historical content for Sessions 1 and 2 (Session 3 is "current" and lives
+  // on the live Overview/SERP screens instead of a frozen snapshot).
+  var sessionData = {
+    1: {
+      title: 'Session 1 — Aug 5, 2026',
+      meta: '16 minutes · task started here',
+      recap: 'First session — broad search on "green spaces and well-being." Saved one mental/emotional paper and one comparing green space types; also opened a social engagement paper but didn\'t save it.',
+      queries: ['green spaces well-being'],
+      opened: [
+        '<span class="doc-icon">○</span> Nature contact and mental health: a meta-analysis of a growing evidence base',
+        '<span class="doc-icon">○</span> A taxonomy of urban green space types and their ecological functions',
+        '<span class="doc-icon">○</span> Community gardens as sites of social cohesion: a qualitative study (opened, not saved)'
+      ],
+      saved: [
+        '<span class="doc-icon">✓</span> Nature contact and mental health: a meta-analysis of a growing evidence base — added to <b>Mental / emotional well-being</b>',
+        '<span class="doc-icon">✓</span> A taxonomy of urban green space types and their ecological functions — added to <b>Green Space</b>'
+      ],
+      subgoals: [
+        ['① Physical health', 'Not started'],
+        ['② Mental / emotional well-being', '1/2 shown saved · not yet rated'],
+        ['③ Social engagement', '0/2 shown saved · not yet rated'],
+        ['④ Green Space', '1/2 shown saved · not yet rated'],
+        ['⑤ Different populations / settings', 'Not started']
+      ],
+      timeline: [
+        ['query','2:10 PM','🔎 Searched: <i>"green spaces well-being"</i>'],
+        ['open','2:11 PM','○ Opened: Nature contact and mental health: a meta-analysis of a growing evidence base'],
+        ['save','2:13 PM','✓ Saved → <b>Mental / emotional well-being</b>'],
+        ['open','2:15 PM','○ Opened: A taxonomy of urban green space types and their ecological functions'],
+        ['save','2:18 PM','✓ Saved → <b>Green Space</b>'],
+        ['open','2:22 PM','○ Opened: Community gardens as sites of social cohesion: a qualitative study'],
+        ['review','2:24 PM','👁 Reviewed, not saved — <b>Social engagement</b>'],
+        ['end','2:26 PM','🏁 Session ended — stopped: 💤 taking a break']
+      ]
+    },
+    2: {
+      title: 'Session 2 — Aug 9, 2026',
+      meta: '27 minutes · 4-day gap since Session 1',
+      recap: 'Made big gains on green space this session — saved 4 papers comparing different types — plus one more mental/emotional paper. Also reviewed two social engagement results without saving either.',
+      queries: ['green space types comparison well-being', 'green space mental health stress', 'community green space social ties'],
+      opened: [
+        '<span class="doc-icon">○</span> Green spaces around schools and children\'s socio-emotional development',
+        '<span class="doc-icon">○</span> Comparing park, forest, and community garden exposure effects on well-being',
+        '<span class="doc-icon">○</span> Blue space versus green space: differential effects on restoration',
+        '<span class="doc-icon">○</span> Pocket parks and micro-green spaces in dense urban environments',
+        '<span class="doc-icon">○</span> Street trees and canopy cover as a distinct green space category',
+        '<span class="doc-icon">○</span> Shared green space use and neighbourhood social ties (opened, not saved)',
+        '<span class="doc-icon">○</span> Green space as a setting for intergenerational contact (opened, not saved)'
+      ],
+      saved: [
+        '<span class="doc-icon">✓</span> Green spaces around schools and children\'s socio-emotional development — added to <b>Mental / emotional well-being</b>',
+        '<span class="doc-icon">✓</span> Comparing park, forest, and community garden exposure effects on well-being — added to <b>Green Space</b>',
+        '<span class="doc-icon">✓</span> Blue space versus green space: differential effects on restoration — added to <b>Green Space</b>',
+        '<span class="doc-icon">✓</span> Pocket parks and micro-green spaces in dense urban environments — added to <b>Green Space</b>',
+        '<span class="doc-icon">✓</span> Street trees and canopy cover as a distinct green space category — added to <b>Green Space</b>'
+      ],
+      subgoals: [
+        ['① Physical health', 'Not started'],
+        ['② Mental / emotional well-being', '2/4 shown saved · 👍 well-covered'],
+        ['③ Social engagement', '0/4 shown saved · 😐 some, but thin'],
+        ['④ Green Space', '5/6 shown saved · 👍 well-covered'],
+        ['⑤ Different populations / settings', 'Not started']
+      ],
+      timeline: [
+        ['query','10:00 AM','🔎 Searched: <i>"green space types comparison well-being"</i>'],
+        ['open','10:02 AM','○ Opened: Comparing park, forest, and community garden exposure effects on well-being'],
+        ['save','10:04 AM','✓ Saved → <b>Green Space</b>'],
+        ['open','10:06 AM','○ Opened: Blue space versus green space: differential effects on restoration'],
+        ['save','10:08 AM','✓ Saved → <b>Green Space</b>'],
+        ['open','10:10 AM','○ Opened: Pocket parks and micro-green spaces in dense urban environments'],
+        ['save','10:12 AM','✓ Saved → <b>Green Space</b>'],
+        ['open','10:14 AM','○ Opened: Street trees and canopy cover as a distinct green space category'],
+        ['save','10:16 AM','✓ Saved → <b>Green Space</b>'],
+        ['query','10:18 AM','🔎 Searched: <i>"green space mental health stress"</i>'],
+        ['open','10:20 AM','○ Opened: Green spaces around schools and children\'s socio-emotional development'],
+        ['save','10:22 AM','✓ Saved → <b>Mental / emotional well-being</b>'],
+        ['query','10:24 AM','🔎 Searched: <i>"community green space social ties"</i>'],
+        ['open','10:25 AM','○ Opened: Shared green space use and neighbourhood social ties'],
+        ['review','10:26 AM','👁 Reviewed, not saved — <b>Social engagement</b>'],
+        ['open','10:27 AM','○ Opened: Green space as a setting for intergenerational contact'],
+        ['review','10:27 AM','👁 Reviewed, not saved — <b>Social engagement</b>'],
+        ['end','10:27 AM','🏁 Session ended — stopped: ✅ done for now']
+      ]
+    }
+  };
+
+  // ---- Per-result direction-confidence rows, tied directly to the Coverage Map --
+  // These rows are NOT a separate keyword system — they're confidence scores
+  // against the SAME 5 search directions shown in the Coverage map. Tapping one
+  // saves this result into that direction, and the Coverage map's count updates
+  // live, because Plan/Coverage/Clarity are one shared state (Page 19) — this is
+  // just a third entry point into it, alongside the Overview rings and the plain
+  // 💾 save action.
+  var coverage = { physical: 0, mental: 5, social: 0, green: 7, populations: 0 };
+  var coverageMeta = {
+    physical:    { countId: 'covCountPhysical',    dotId: 'covDotPhysical',    zeroLabel: 'not started' },
+    mental:      { countId: 'covCountMental',      dotId: 'covDotMental' },
+    social:      { countId: 'covCountSocial',      dotId: 'covDotSocial' },
+    green:       { countId: 'covCountGreen',       dotId: 'covDotGreen' },
+    populations: { countId: 'covCountPopulations', dotId: 'covDotPopulations' }
+  };
+
+  function renderCoverage(){
+    Object.keys(coverageMeta).forEach(function(key){
+      var meta = coverageMeta[key];
+      var n = coverage[key];
+      var countEl = document.getElementById(meta.countId);
+      if (countEl) { countEl.textContent = (n === 0 && meta.zeroLabel) ? meta.zeroLabel : (n + ' saved'); }
+      var dotEl = document.getElementById(meta.dotId);
+      if (dotEl && n > 0 && dotEl.classList.contains('empty')) {
+        dotEl.classList.remove('empty');
+        dotEl.classList.add('partial');
+      }
+    });
+  }
+
+  function toggleDirectionSave(el, directionKey){
+    var nowSaved = el.classList.toggle('kw-saved');
+    coverage[directionKey] += nowSaved ? 1 : -1;
+    renderCoverage();
+  }
+
+  // ---- "Why this score?" explanations ---------------------------------------
+  // LVSIP's Scrutable principle in practice (Page 17): every AI confidence score
+  // is explainable on demand, in plain language, tied to the actual snippet text —
+  // not just a bare number the searcher has to trust blindly.
+  var directionLabels = {
+    physical: '① Physical health',
+    mental: '② Mental / emotional well-being',
+    social: '③ Social engagement',
+    green: '④ Green Space',
+    populations: '⑤ Populations / settings'
+  };
+  var whyDocTitles = {
+    d1: 'Green space access and well-being across different population groups',
+    d2: 'Tree-lined streets and pedestrian stress recovery',
+    d3: 'Green space exposure and reduced anxiety symptoms',
+    d4: 'Green spaces around schools and children\'s socio-emotional development'
+  };
+  var whyExplanations = {
+    'd1-populations': { category: 'Excellent', tier: 'tier-excellent', text: 'The abstract explicitly compares outcomes across age groups, income levels, and cultural backgrounds — direct population-level comparison language, and the strongest signal anywhere in this abstract.' },
+    'd1-green':       { category: 'Good', tier: 'tier-good',  text: '"Green space access" is named in the title and is the subject being compared — but the comparison itself is about people, not about green space types, so this is a secondary signal.' },
+    'd1-mental':      { category: 'Possible', tier: 'tier-possible',  text: '"Well-being" appears once, as the outcome being measured — but the abstract never frames it in emotional or mental-health-specific terms, so this is a weak, indirect signal.' },
+
+    'd2-green':    { category: 'Excellent', tier: 'tier-excellent', text: 'Tree-lined streets are a specific green space feature, and the entire study is structured around comparing tree-lined vs. treeless streets — the core manipulation here is about green space.' },
+    'd2-physical': { category: 'Good', tier: 'tier-good',  text: 'Physiological stress markers are a bodily measure, which reads as physical health — but it\'s specifically about the nervous system\'s stress response, not physical health in general.' },
+    'd2-mental':   { category: 'Possible', tier: 'tier-possible',  text: 'Stress recovery has emotional well-being implications, but the abstract frames it entirely in physiological terms, never psychological ones — a weaker, inferred connection.' },
+
+    'd3-mental':   { category: 'Excellent', tier: 'tier-excellent', text: '"Anxiety symptoms" and "mental health interventions" are both named directly — about as explicit a mental/emotional well-being signal as an abstract gets.' },
+    'd3-green':    { category: 'Excellent', tier: 'tier-excellent', text: 'Green space exposure is the independent variable driving the whole review — named directly, on par with the mental-health signal above.' },
+    'd3-physical': { category: 'Possible', tier: 'tier-possible',  text: 'Anxiety has physical symptoms, but this systematic review never discusses physical health outcomes directly — this category reflects a plausible but unstated connection.' },
+
+    'd4-mental':      { category: 'Excellent', tier: 'tier-excellent', text: '"Emotional regulation" is named directly, and this exact paper is already saved under Mental / emotional well-being from Session 2 — the AI is repeating a confirmed match, not guessing fresh.' },
+    'd4-social':      { category: 'Good', tier: 'tier-good',  text: '"Social skills" is named directly alongside emotional regulation — a real signal, though it shares the sentence with the slightly stronger emotional-regulation phrase.' },
+    'd4-populations': { category: 'Possible', tier: 'tier-possible',  text: 'Children are a specific population subgroup and schools are a specific setting — a real match to Populations/settings, but only implicit, since the abstract never frames this as a population comparison the way the Rigolon et al. paper does.' }
+  };
+
+  function openWhyModal(evt, docId, directionKey){
+    evt.stopPropagation(); // don't also trigger the row's save/unsave toggle
+    var info = whyExplanations[docId + '-' + directionKey];
+    if (!info) return;
+    document.getElementById('whyModalDoc').textContent = whyDocTitles[docId];
+    document.getElementById('whyModalTitle').innerHTML =
+      '<span class="kw-pct ' + info.tier + '">' + info.category + '</span> ' + directionLabels[directionKey];
+    document.getElementById('whyModalBody').textContent = info.text;
+    document.getElementById('whyModal').classList.add('show');
+  }
+  function closeWhyModal(){
+    document.getElementById('whyModal').classList.remove('show');
+  }
+
+  function setScreen(mode){
+    var screens = {
+      setup: document.getElementById('setupScreen'),
+      history: document.getElementById('historyScreen'),
+      overview: document.getElementById('overviewScreen'),
+      detail: document.getElementById('detailScreen')
+    };
+    var searchBar = document.getElementById('searchBar');
+    var serpLayout = document.getElementById('serpLayout');
+    var recap = document.getElementById('recapCard');
+
+    screens.setup.classList.toggle('show', mode === 'setup');
+    screens.history.classList.toggle('show', mode === 'history');
+    screens.overview.classList.toggle('show', mode === 'overview');
+    screens.detail.classList.toggle('show', mode === 'detail');
+
+    var showSerp = (mode === 'fresh' || mode === 'resumed');
+    searchBar.style.display = showSerp ? '' : 'none';
+    serpLayout.style.display = showSerp ? '' : 'none';
+    recap.classList.toggle('show', mode === 'resumed');
+
+    // The Check-out Chip only makes sense while actively on the SERP — "on leaving/
+    // idling THE page" (the search page) — not while already browsing History/Overview.
+    document.getElementById('checkoutToast').classList.toggle('show', showSerp);
+    if (showSerp) { resumeCheckout(); } // fresh visit to the SERP = full options, not left mid-pause
+
+    document.getElementById('btnSetup').classList.toggle('active', mode === 'setup');
+    document.getElementById('btnHistory').classList.toggle('active', mode === 'history');
+    document.getElementById('btnOverview').classList.toggle('active', mode === 'overview');
+    document.getElementById('btnFresh').classList.toggle('active', mode === 'fresh');
+    document.getElementById('btnResume').classList.toggle('active', mode === 'resumed');
+  }
+
+  // ---- Check-out Chip interactions -----------------------------------------
+  // Grounded in: "Stopped yet Complete" (stopping reasons aren't interchangeable —
+  // a task-related "found everything" stop differs from a non-task-related "got
+  // interrupted" stop); the MISE model's "anticipated" renewal reason (Everyday
+  // Cross-session Search); Tulving & Thomson's encoding specificity principle (the
+  // REASON a session ended shapes what cue is needed to reconstruct it later); and
+  // Crescenzi et al.'s four metacognitive activities, where "stuck" maps directly
+  // onto REVISION — changing strategy, not just remembering to come back.
+  var checkoutReasons = {
+    done:  '✅ done for now',
+    break: '💤 taking a break',
+    stuck: '🤔 stuck (on populations/settings)',
+    ask:   '👥 asked someone for help'
+  };
+
+  function checkOut(reason){
+    var chip = document.getElementById('s3StopChip');
+    if (chip) { chip.textContent = 'stopped: ' + checkoutReasons[reason]; }
+
+    if (reason === 'done') {
+      // Task-related, SATISFIED stop (MacKay & Watters / Stopped yet Complete) —
+      // the searcher found what they needed. The fitting move is retrospective:
+      // go review the full multi-session record, including what just got wrapped up.
+      setScreen('history');
+    } else if (reason === 'break') {
+      // A short, ANTICIPATED interruption (MISE model) — no revision needed, no
+      // review needed, memory will still be fresh. Don't navigate at all; instead
+      // the toast itself visibly collapses to a minimal "paused" state, distinct
+      // from both Done (leaves the page) and Stuck (also leaves the page, but
+      // to a different, corrective screen).
+      document.getElementById('checkoutActive').classList.add('hide');
+      document.getElementById('checkoutPaused').classList.add('show');
+    } else if (reason === 'stuck') {
+      // REVISION-needed stop (Crescenzi et al.'s 4th metacognitive activity) — not
+      // "come back later," but "help me decide what to do differently, now." Routes
+      // straight to the Session Overview: the forward-looking screen with the
+      // coverage ring for the flagged direction and the Continue/New-project choice —
+      // deliberately a DIFFERENT screen than Done's destination (History is backward-
+      // looking review; Overview is forward-looking decision-making).
+      setScreen('overview');
+    } else if (reason === 'ask') {
+      openShareModal();
+    }
+  }
+
+  function resumeCheckout(){
+    document.getElementById('checkoutActive').classList.remove('hide');
+    document.getElementById('checkoutPaused').classList.remove('show');
+  }
+
+  function openShareModal(){
+    document.getElementById('shareModal').classList.add('show');
+  }
+  function closeShareModal(){
+    document.getElementById('shareModal').classList.remove('show');
+    document.getElementById('shareCopyNote').textContent = '';
+  }
+  function mockCopySummary(){
+    document.getElementById('shareCopyNote').textContent = '✓ Copied (mock — wireframe only)';
+  }
+
+  function showSessionDetail(n){
+    // Session 3 is the current/live session — route to the live Overview, not a frozen snapshot.
+    if (n === 3) { setScreen('overview'); return; }
+    var d = sessionData[n];
+    document.getElementById('detailTitle').textContent = d.title;
+    document.getElementById('detailMeta').textContent = d.meta;
+    document.getElementById('detailRecap').textContent = d.recap;
+    document.getElementById('detailQueries').innerHTML = d.queries.map(function(q){ return '<div class="qchip">'+q+'</div>'; }).join('');
+    document.getElementById('detailOpened').innerHTML = d.opened.map(function(o){ return '<div class="doc-row">'+o+'</div>'; }).join('');
+    document.getElementById('detailSaved').innerHTML = d.saved.map(function(s){ return '<div class="doc-row saved">'+s+'</div>'; }).join('');
+    document.getElementById('detailSubgoals').innerHTML = d.subgoals.map(function(sg){
+      return '<div class="mini-sg"><div class="mini-sg-title">'+sg[0]+'</div>'+sg[1]+'</div>';
+    }).join('');
+    document.getElementById('detailTimeline').innerHTML = d.timeline.map(function(item){
+      var dotClass = item[0] === 'open' ? '' : ' ' + item[0];
+      return '<div class="tl-item"><div class="tl-dot'+dotClass+'"></div><div class="tl-time">'+item[1]+'</div><div class="tl-text">'+item[2]+'</div></div>';
+    }).join('');
+    toggleDetailView('action');
+    setScreen('detail');
+  }
+
+  function toggleDetailView(mode){
+    document.getElementById('detailScreen').classList.toggle('time-view', mode === 'time');
+    document.getElementById('btnDetailAction').classList.toggle('active', mode === 'action');
+    document.getElementById('btnDetailTime').classList.toggle('active', mode === 'time');
+  }
+
+  function toggleDys(){
+    document.body.classList.toggle('dys-mode');
+    document.getElementById('btnDys').classList.toggle('active');
+  }
+
+  function toggleHistoryDetail(mode){
+    document.getElementById('historyScreen').classList.toggle('detailed', mode === 'detailed');
+    document.getElementById('btnHistCompact').classList.toggle('active', mode === 'compact');
+    document.getElementById('btnHistDetailed').classList.toggle('active', mode === 'detailed');
+  }
+  // start on the New Project Setup screen
+  document.addEventListener('DOMContentLoaded', function(){ setScreen('setup'); renderCoverage(); });
+</script>
+
+</body>
+</html>
