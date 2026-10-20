@@ -60,3 +60,13 @@ Source: the four diff briefs (`plan-diff.md`, `serp-diff.md`, `save-diff.md`, `s
 - Figs 3 and 4: two counts (should be three); search text differs from Fig 5's last query; "Description:" label has no code behind it.
 - Fig 5: tiles with S3/S2/S1 badges, "Community access +0" and Session 2 with 0 saved (Session 2 now saves one result under Community access); "Project" wording.
 - The figure captions now use the new names, so they will not match the images until those are redrawn.
+
+## Second pass (2026-10-20): the "Why?" button on generated sub-goals
+
+plan-diff (focused run) found that v27 never mentioned the "Why?" button on AI-proposed directions on Plan Workspace; the only "why" features in the document were the "(?)" icons on result tags (2.1). The code and `01-core.md` rule 4 have it. Added:
+
+- **1.1 Planning: Goal Decomposition**, paragraph "The LLM proposes the candidates, and the searcher decides…" (after the Fig 1 caption), a passage saying each LLM-proposed candidate has a sparkle icon and a "Why?" button; selecting it shows one sentence under the candidate saying why searching that direction helps with the goal; it is written in the same step as the candidate; sub-goals Jamie adds have no sparkle and no reason; the reason is kept with selected sub-goals and shown again on reopening; the button only shows the reason and does not select the candidate. It reuses the two guidance citations already used in 2.1 (Amershi et al. 2019; Weisz et al. 2024), each placed right after its own claim. The community-access sentence is an illustration worded after a real generated reason.
+- **Keeping the Searcher in Control**, paragraph "This division shows at each step…": one clause saying each candidate comes with a "Why?" button showing the reason it was proposed.
+- **1.1**, paragraph "On the first screen (Fig 1)…": reworded "so the list is not limited to what the searcher already knows" to "so the list reaches beyond what the searcher already knows" (R41, say what it does).
+
+Still open: Fig 1 shows the sparkle but no "Why?" button (needs redrawing by hand); the new passage cites in the document's author-year style, while `.agents/rules/citation-precision.md` asks for numbered [n] citations only (the whole document is author-year today).
