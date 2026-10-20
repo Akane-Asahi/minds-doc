@@ -6,8 +6,9 @@ Subagents for the MINDS thesis work. Each agent has one folder with its instruct
 |---|---|---|
 | [plan-diff](plan-diff/AGENT.md) | Compares the Plan screen in the `minds-app` code with the latest planning document in `Claude outputs/` and lists every difference | `Claude outputs/plan-diff.md` |
 | [serp-diff](serp-diff/AGENT.md) | Same comparison for the SERP screen (results page, result cards, directions panel, saving), plus drift between the planning document and the in-repo spec | `Claude outputs/serp-diff.md` |
+| [save-diff](save-diff/AGENT.md) | Same comparison for the Saved results screens (all results, one direction, one session, and the buttons that lead there), including the planning document's Fig 3 and Fig 4 and whether the view is wired or mock-only | `Claude outputs/save-diff.md` |
 
-serp-diff reuses `plan-diff/find_latest_plan_doc.py` to pick the newest planning document. To run it, use the same prompts as plan-diff below with `serp-diff` in place of `plan-diff` (for example `Agent(subagent_type: "serp-diff", prompt: "Run the serp-diff agent with its defaults.")`). It also accepts `focus: <part of the SERP>` to narrow the scope.
+serp-diff and save-diff reuse `plan-diff/find_latest_plan_doc.py` to pick the newest planning document. To run either, use the same prompts as plan-diff below with `serp-diff` or `save-diff` in place of `plan-diff` (for example `Agent(subagent_type: "serp-diff", prompt: "Run the serp-diff agent with its defaults.")`). Both accept `focus: <part of the screen>` to narrow the scope. save-diff also has `save-diff/extract_plan.sh`, which turns the planning document into text and extracts its figures so the agent can look at Fig 3 and Fig 4.
 
 ## Layout
 
