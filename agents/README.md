@@ -5,6 +5,9 @@ Subagents for the MINDS thesis work. Each agent has one folder with its instruct
 | Agent | What it does | Writes |
 |---|---|---|
 | [plan-diff](plan-diff/AGENT.md) | Compares the Plan screen in the `minds-app` code with the latest planning document in `Claude outputs/` and lists every difference | `Claude outputs/plan-diff.md` |
+| [serp-diff](serp-diff/AGENT.md) | Same comparison for the SERP screen (results page, result cards, directions panel, saving), plus drift between the planning document and the in-repo spec | `Claude outputs/serp-diff.md` |
+
+serp-diff reuses `plan-diff/find_latest_plan_doc.py` to pick the newest planning document. To run it, use the same prompts as plan-diff below with `serp-diff` in place of `plan-diff` (for example `Agent(subagent_type: "serp-diff", prompt: "Run the serp-diff agent with its defaults.")`). It also accepts `focus: <part of the SERP>` to narrow the scope.
 
 ## Layout
 
