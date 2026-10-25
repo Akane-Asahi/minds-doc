@@ -13,6 +13,7 @@ v30 is v29 plus text edits that bring the planning document in line with the min
 - The Workspace Overview lists unselected sub-goals too, with a tick to select or unselect (at least one stays selected). Before: "only the selected sub-goals are shown on the Workspace Overview".
 - "Why?" card opens above the candidate with an arrow (was "beside").
 - The reason is kept with every proposed sub-goal, selected or not (was "each sub-goal that Jamie selects").
+- New sentence on the origin mark (added after plan-diff on minds-app a52ed50): a blue four-pointed star after the label for a sub-goal the LLM proposed, a round person icon for one Jamie added or edited; always visible, unlike the "Why?" button. First screen only: the Overview shows the person icon but no star on proposed sub-goals.
 
 **1.2 Planning: Query Generation**
 - The system now writes the query in the search box instead of running it. Applies to the first query for a sub-goal, the "mental health greenspace" example, and returning to a sub-goal.
@@ -44,22 +45,27 @@ Doc and code disagree, and the right side is not clear:
 1. **Model for each task.** The doc says a capable model for sub-goals and a lighter one for queries (1.1, 1.2, Implementation Note). The code uses one model (`LLM_MODEL`) for every call. Change one side.
 2. **"Reason" call.** A "?" on a saved-view chip with no stored reason makes a model call (`SavedResultCard.jsx:50-55`); the doc's list of AI components does not include it.
 3. **Last-activity cards.** The doc says last sub-goal searched, last result saved, last query run. The code uses the direction selected at session end and its newest stored query (2026-10-18 decision, "Last Query" still to confirm).
-4. **Doc says bars are full at 10 saved with "+N more" on the results page.** Only the Overview does this; the SERP panel does not clip (`DirectionsPanel.jsx:101-135`). Fix the code, or make the doc say Overview only.
+4. **Bars past 10 saved on the results page.** The v30 text says "+N more" at the right end of the name line. That is now true only on the Overview. Since commit bdac003 the results-page panel shows "+N" inside the right end of the bar, with no "more" text. Reword §4, or make the two screens match.
 5. **Edit and remove behaviour.** Editing a sub-goal that has saved results creates a new custom one and leaves the old one unticked; a removed sub-goal with saves returns unticked at the end. Not described in the doc.
 6. **Keyboard reordering** of sub-goals does not exist (drag by mouse or touch only); the doc says "drag any sub-goal".
 
 Code defects found by the agents (not doc edits):
 - Overview: an ended session still shows "Running", and a New tag stays up to an hour (`overviewController.js:49` ignores the stored `endedAt`).
-- Overview: clicking an unselected card, or Continue Last Activity when the last sub-goal is unticked, opens the SERP on the first selected one (`MindsSerpPage.jsx:127-136`).
 - Saved results: choosing a name in the right panel drops the router state (`SavedResultsPage.jsx:90`), so the search box probably returns and Return goes to the SERP. Needs a click-through to confirm.
-- Header button still reads "Return to Search" when it goes to the Overview (`MainHeader.jsx:240`).
-- "Fill the three fields" error text on the Plan screen; there are two fields (`useWiredPlanModel.js:61`, `planController.js:106`).
-- Add Custom at 30 sub-goals on the Overview shows the 7-word message instead of a limit message (`YourSessionsPage.jsx:48`).
+
+## Commits after v30's first push that the text does not cover yet
+
+Found by reading minds-app a52ed50 (2026-10-25). Not edited, because they go beyond the star change:
+- **"What you might explore" panel is gone from the results page** (2973394). A suggested direction now shows only as a "New" tag on result cards. v30 still describes the panel in 2.2, in 5 (Cross-Session Support) and in Keeping the Searcher in Control, and Fig 2.3 shows it.
+- **Opening an unselected direction on the Overview** asks first ("Direction not selected … Move it to Selected directions and continue search?"), then selects it and opens the results page. Continue Last Activity does the same when the last direction is unticked. This fixes the earlier defect where it opened the first selected one.
+- **Return button** reads "Return to Overview" when Saved results was opened from the Overview (was "Return to Search"). v30 describes the behaviour but not the label.
+- **Workspaces list**: each card keeps only a round "Open plan" button and a menu button; the stats were removed (7bde993). The planning document does not describe the list, so nothing to edit unless you want it added.
+- **Fixed in code, no doc change needed:** the Plan screen error text now says "Fill both fields"; Add Custom at 30 directions on the Overview shows a limit message.
 
 ## Figures are out of date and need new screenshots
 
 The text edits above are not matched by the images. Replace these:
-- **Fig 1**: shows "Plan your new project", three fields, sparkles, a dashed "Add search direction" and no Edit/Remove. Code has two fields, three bordered panels, Edit and Remove on every row, Generate more and Add Custom.
+- **Fig 1**: shows "Plan your new project", three fields, a sparkle on every row (including Jamie's own sub-goals, which now carry a person icon instead), a dashed "Add search direction" and no Edit/Remove. Code has two fields, three bordered panels, Edit and Remove on every row, Generate more and Add Custom.
 - **Fig 2.1 to 2.3**: still show the Search Direction dropdown, "DIRECTIONS YOU HAVE EXPLORED", light blue best chips and a sparkle on AI sub-goals.
 - **Fig 3 and Fig 4**: right side empty; two counts shown, code has three; "Description:" label and "Journal article" type label that the code does not have.
 - **Fig 5**: S3/S2/S1 badges, a "Community access +0" pill, arrows instead of tick circles, no Unselected list, no Running status, no header card, dashed "Add search direction".
