@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# git commit-msg hook for minds-app.
+# A commit that stages functional files (frontend/src, backend; not tests, mocks, ui-dev, markdown)
+# must carry a "doc-impact:" line, so the change ledger can say what the planning document needs.
+#
+#   doc-impact: none
+#   doc-impact: plan §1.1 and Fig 1; spec F1
+#
+# Skip once with: git commit --no-verify
+
+msg_file="$1"
+first="$(head -n1 "$msg_file")"
+case "$first" in Merge*|Revert*|fixup!*|squash!*) exit 0 ;; esac
+
+IGNORE='(\.test\.[jt]sx?$|/__tests__/|^frontend/src/(mocks|ui-dev)/|\.md$|package(-lock)?\.json$)'
+staged="$(git diff --cached --name-only | grep -E '^(frontend/src|backend)/' | grep -Ev "$IGNORE")"
+[ -z "$staged" ] && exit 0
+
+if grep -v '^#' "$msg_file" | grep -qiE '^doc-impact:[[:space:]]*[^[:space:]]'; then
+  exit 0
+fi
+
+n="$(printf '%s\n' "$staged" | wc -l | tr -d ' ')"
+cat >&2 <<EOF
+Commit refused: ${n} functional file(s) staged but the message has no "doc-impact:" line.
+Add one line at the end of the message, for example:
+
+  doc-impact: none
+  doc-impact: plan §1.1 and Fig 1; spec F1
+
+(use "none" for a code-only fix; --no-verify skips this check once)
+EOF
+exit 1

@@ -1,0 +1,81 @@
+{
+  "_about": "Maps minds-app file paths to the diff agent, spec files and planning-doc sections they affect. Regexes match repo-relative paths with forward slashes. Edit this file when a feature moves; which-diff.py, the hooks and /done read it.",
+  "functional": "^(frontend/src|backend)/",
+  "ignore": "(\\.test\\.[jt]sx?$|/__tests__/|^frontend/src/(mocks|ui-dev)/|\\.md$|package(-lock)?\\.json$)",
+  "areas": [
+    {
+      "name": "Plan Workspace",
+      "agents": ["plan-diff"],
+      "spec": ["F1-plan-workspace.md"],
+      "planSections": ["1.1 Planning: Goal Decomposition", "Fig 1", "Implementation Note"],
+      "paths": [
+        "^frontend/src/features/planWorkspace/",
+        "^frontend/src/features/workspace/",
+        "^backend/controllers/(plan|searchDirections|workspace)Controller",
+        "^backend/schemas/(plan|directions)\\.js",
+        "^backend/routes/(workspace|searchDirections)Routes",
+        "^backend/models/(subGoal|workspace)Model"
+      ]
+    },
+    {
+      "name": "SERP",
+      "agents": ["serp-diff"],
+      "spec": ["F2-serp-pipeline.md", "F3-serp-cards-chips.md", "F4-new-direction-detection.md"],
+      "planSections": ["1.2 Query Generation", "2.1 Relevance", "2.2 New Directions", "2.3 Switching and Adding", "4 Monitoring (results-page panel)", "Fig 2.1 to 2.3"],
+      "paths": [
+        "^frontend/src/features/mindsSerp/",
+        "^frontend/src/features/serp/",
+        "^backend/controllers/(session|results|emerging|library)Controller",
+        "^backend/schemas/(search|query|results|scoring|emerging)\\.js",
+        "^backend/routes/(sessions|results|emergingDirections|library)Routes",
+        "^backend/services/",
+        "^backend/models/(queries|resultScore|resultsCache|primoCache|sessionResult|emergingDirection)Model"
+      ]
+    },
+    {
+      "name": "Your sessions / Workspace Overview",
+      "agents": ["sessions-diff"],
+      "spec": ["F5-your-sessions.md"],
+      "planSections": ["4 Monitoring (Overview)", "5 Cross-Session Support", "Fig 5"],
+      "paths": [
+        "^frontend/src/features/yourSessions/",
+        "^backend/controllers/(overview|session)Controller",
+        "^backend/models/sessionModel"
+      ]
+    },
+    {
+      "name": "Saved results",
+      "agents": ["save-diff"],
+      "spec": ["F6-saved-views.md"],
+      "planSections": ["3 Organization: Saving into Sub-Goals", "5 (Saved Results button)", "Fig 3", "Fig 4"],
+      "paths": [
+        "^frontend/src/features/savedResults/",
+        "^frontend/src/features/serp/layout/MainHeader",
+        "^backend/controllers/(saveddocs|savedView)Controller",
+        "^backend/routes/saveddocsRoutes",
+        "^backend/models/(savedResult|savedDoc)Model"
+      ]
+    },
+    {
+      "name": "LLM calls (5.1 to 5.6)",
+      "agents": ["plan-diff", "serp-diff"],
+      "spec": ["F1-plan-workspace.md", "F2-serp-pipeline.md", "F4-new-direction-detection.md"],
+      "planSections": ["Implementation Note: Matching AI Techniques to Each Task"],
+      "paths": ["^backend/llm/"]
+    },
+    {
+      "name": "Data model and API",
+      "agents": [],
+      "spec": ["02-data-model.md", "03-api.md"],
+      "planSections": [],
+      "paths": ["^backend/(models|schemas|routes)/"]
+    },
+    {
+      "name": "Theme and accessibility",
+      "agents": [],
+      "spec": ["accessibility.md"],
+      "planSections": [],
+      "paths": ["^frontend/src/theme/"]
+    }
+  ]
+}

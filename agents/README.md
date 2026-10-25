@@ -11,6 +11,10 @@ Subagents for the MINDS thesis work. Each agent has one folder with its instruct
 
 serp-diff, save-diff and sessions-diff reuse `plan-diff/find_latest_plan_doc.py` to pick the newest planning document. To run any of them, use the same prompts as plan-diff below with `serp-diff`, `save-diff` or `sessions-diff` in place of `plan-diff` (for example `Agent(subagent_type: "serp-diff", prompt: "Run the serp-diff agent with its defaults.")`). Both accept `focus: <part of the screen>` to narrow the scope. save-diff also has `save-diff/extract_plan.sh`, which turns the planning document into text and extracts its figures so the agent can look at Fig 3 and Fig 4.
 
+## Keeping the docs in step with the code: doc-sync
+
+The four diff agents compare the code with the planning document as it is now. [doc-sync/](doc-sync/README.md) records what changed and why as it happens: a change ledger and a sync marker in `Claude outputs/`, a `/done` skill, a Stop hook and a commit-msg hook for minds-app, and `which-diff.py`, which says which of these agents to run for the work done since the planning document was last synced.
+
 ## Layout
 
 ```
