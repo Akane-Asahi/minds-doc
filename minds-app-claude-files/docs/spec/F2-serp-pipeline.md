@@ -25,14 +25,19 @@ are good enough.
   applies to the active direction only.
 
 **Meta bar.** Left: `Results: N` (Primo's total hit count, `totalHits`); informational only,
-never a denominator for anything. Right: **Search Direction** dropdown.
+never a denominator for anything. There is **no Search Direction dropdown** (removed 2026-10-24).
 
-**Search Direction dropdown.** Options = all selected directions in `orderIndex` order; the first
-is selected on arrival. Choosing another reuses its stored query, or generates it (5.2) if this is the first time
-that direction is selected, then searches Primo, scores, and re-renders the field, count and list (skeleton cards while loading).
-Lists already loaded this session are kept, so switching back is instant. Switching never changes
-saved results or the right-panel counts. Keyboard-operable (native `<select>` or accessible
-listbox).
+**Choosing a direction (Telot, 2026-10-24).** Each direction in "Directions you have explored" has a **search icon** at the
+right of its row (accessible name "Write the search words for <label> in the search box"). The active direction's icon is filled
+and has `aria-current`. Pressing it marks that direction as the one being searched and **only writes its query in the search box**: the stored query,
+or, on the direction's first selection, one written by 5.2 and stored (`POST /api/sessions/:id/query`). **No Primo call, no
+scoring, nothing logged as reviewed, and the results section does not change** (cards, "Results: N" and chips stay those of the
+last search). The section changes only when the query is sent: the student presses the search icon in the search box (or Enter),
+which searches Primo, scores and ranks for that direction as in "Submit" above, and that direction's list replaces the one on
+screen. If the text is exactly the stored query it is sent without `queryText` (the stored query is reused, no new `user` row);
+any other text is sent as typed. A query already known is not requested again. **Typing animation (Telot, 2026-10-25):** while the query is being written (first selection) the empty box shows "Query generating". When the query is ready, whether just written or taken from storage, it is revealed letter by letter as if typed (every time a direction's icon is pressed, even for a query already shown), the box is read-only and the box's search button disabled meanwhile, then the cursor is placed in the box automatically. The cursor (caret) is the primary blue. With reduced motion the query appears at once and the cursor is still placed. If the query cannot be written, the status line
+says "A search query could not be written. Try again, or type your own.", the box stays empty and pressing the icon again
+tries again. The first search on arrival still runs by itself for the starting direction.
 
 ## Ranking flow (per search)
 
@@ -188,4 +193,4 @@ If the result is `low_confidence`, the text shown starts "Based on title and sub
 
 Embedding-based scoring; full-text fetching; categorical badges (deferred).
 
-*Source: old spec 4 (use), 5.2, 5.3, 8.2 (search field, meta bar, dropdown, ranking, latency, states).*
+*Source: old spec 4 (use), 5.2, 5.3, 8.2 (search field, meta bar, direction choice, ranking, latency, states).*

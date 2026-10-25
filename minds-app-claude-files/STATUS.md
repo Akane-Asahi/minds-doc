@@ -1,7 +1,7 @@
 # STATUS.md
 
 Read this first in every session. Update it at the end of every session (done / next / blocked).
-Last updated: 2026-10-22 (I5 Your sessions wired).
+Last updated: 2026-10-25 (Your sessions: pills only for saved directions, bar full at 10 with "+N more"; saved chips lose the word "Saved").
 
 ## Where we are
 
@@ -37,6 +37,7 @@ Express + Mongoose); no MINDS feature code exists yet. The spec is split into `d
 - I1 follow-up: a workspace that already has a plan offers "Open workspace Or Update workspace"; Update loads the saved plan and Explore replaces it
   (`replace: true`, one transaction; `GET /plan`). Backend 80 and frontend 222 tests pass.
 - I1 follow-up: Workspaces list menu has **Edit Workspace** (opens the plan page; the Open/Update row shows at the top for a workspace that already has a plan). Frontend 225 tests pass; the menu item itself has no automated test (check by hand).
+- Overview follow-up (2026-10-25): tabs All / Explored, tick circle toggles selection (`PATCH /subgoals/:subGoalId`), Unselected directions list, Generate more / Add Custom shared with Plan Workspace, round user icon for custom directions (also on Plan Workspace). Backend 308 and Overview/Plan frontend tests pass except one older Plan Workspace test (heading text "Set your search goal"). Not yet checked in a browser or by keyboard.
 - I1 follow-up: clicking a workspace on `/workspaces` opens its Plan Workspace page (not the SERP); Open workspace there opens the SERP. No automated test for the list click (check by hand).
 - I1 follow-up: a workspace with a plan now shows the full saved plan by default (no click on Update); an unchanged Explore writes nothing. 228 frontend tests pass.
 - I2: search pipeline, backend only (F2 "As built"): Primo service with 24 h cache and `resultscache`, call 5.2 stored query (one `ai` row per direction),
@@ -54,6 +55,9 @@ Express + Mongoose); no MINDS feature code exists yet. The spec is split into `d
 - **I5 (2026-10-22): Your sessions is wired** at `/workspace/:id/overview` (`features/yourSessions/YourSessionsPage.jsx`, `GET /api/workspaces/:id/overview`, F5 "As built (I5)"). Stored rows, derived on the page; New tag via `subgoals.addedInSessionId`. Backend 295 tests and the Your sessions frontend tests (61) pass (mocked). **Not linked from anywhere** (I7) and the route line in `frontend/src/app/router/index.js` plus the crumb line in `SavedResultsPage.jsx` sit in files that also hold someone else's uncommitted work, so they are not in the I5 commit. **Not checked: a browser, keyboard, screen reader, the real backend.**
 - **Plan Workspace two fields (2026-10-22):** "What I want to find" removed end to end; the LLM gets only goal + already-know; heading "Set your search goal" added (DECISIONS 2026-10-22). Not checked in a browser.
 - **Generate more (2026-10-22):** button beside "Search directions"; 5.1 asks for 16, shows 8, keeps 8 as a page-state reserve (F1 "Generate more", DECISIONS 2026-10-22). Not checked in a browser, and the quality of directions 9 to 16 is unmeasured.
+- **SERP direction choice (2026-10-24):** the Search Direction dropdown is gone; a search icon on each direction row writes its stored query in the search box (`POST /api/sessions/:id/query`, no Primo call) and the search box searches it (F2, DECISIONS 2026-10-24). Backend search tests 32 and the SERP frontend tests pass (mocked). **Not checked: a browser, keyboard, screen reader, the real model.** Unrelated, already failing before this change: one `PlanWorkspaceScreen.test.jsx` test ("Set your search goal" heading).
+- **Plan Workspace follow-up (2026-10-25):** "+ New Workspace" opens Plan Workspace with the workspace name field already open and empty; its hint "Type Workspace name here" is typed out like a SERP query (instant with reduced motion); the field is wider (440px). The sideways scrollbar is gone (the hidden helpers used `width: 1`, which MUI reads as 100%). Stale heading test fixed; 84 Plan Workspace tests pass. Not checked in a browser (DECISIONS 2026-10-25).
+- **Your sessions and chips (2026-10-25, commits 0c39fe2, 695de4e, 209f0cd):** saved chips show no "Saved" text (check icon and solid blue stay). Session tiles show a pill only for directions with 1+ saved, and no pill list when nothing was saved. The direction bar is full at 10 saved (`BAR_CAPACITY`); beyond that the newest session's segment shows only what fits and "+N more" sits in the title row (professor; e.g. 18 saved, 9 in the newest = +9, +1, +8 more). Specs F3, F5, F6, accessibility.md and DECISIONS updated; frontend suite 358 tests pass (jsdom). Planning doc v29 updated to match (Monitoring and Sessions panel text). **Not checked in a browser, by keyboard or with a screen reader.**
 - Directions are new-only (2026-10-21, Orland): call 5.1 returns only angles the student has not thought of; the server stamps `kind: 'new'`.
 - Context system: `CLAUDE.md`, `docs/spec/` (per-feature files), `DECISIONS.md`, `stack_changed.md`,
   `docs/templates/feature-brief.md`.

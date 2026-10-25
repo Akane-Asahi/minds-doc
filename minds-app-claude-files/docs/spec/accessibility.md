@@ -54,7 +54,7 @@ text (2.97). Faded chips are the same grey family and are assumed to fail until 
   segments and the count circle are **not nested** inside it. The count circle is a button named "{n} saved
   under {direction}. Open these results". Focus order: header, breadcrumb, Continue Last Activity, tiles, then
   each card's circle, link and segments. Pills carry the full direction label as text for screen readers (the
-  visible two-word form is `aria-hidden`) and the saved mark as text ("+4 saved", "0 saved"). **A card with 0
+  visible two-word form is `aria-hidden`) and the saved mark as text ("+4 saved"). **A card with 0
   saved shows an empty track and no visible text (Telot, 2026-10-17, overriding the visible-text-cue rule for
   this one case); it keeps hidden text for screen readers: "0 saved — N reviewed" or "No Session Record".** The
   count circle's number is always visible text, so its light outline is decorative. The New tag is text. Hover
@@ -66,7 +66,7 @@ text (2.97). Faded chips are the same grey family and are assumed to fail until 
   session group heading is an `h2` (card titles are `h2` too, as on the SERP). The three counts are visible
   numbers with screen-reader labels ("9 saved results"); icons are decorative. Chips are native buttons with
   `aria-pressed` and names like "Save under Physical health benefits, score 4 out of 5, saved"; saved is solid blue
-  with the text "Saved", unsaved is grey, so state is never colour alone.
+  with a check icon (no text; the accessible name says "saved"), unsaved is grey, so state is never colour alone.
 
 ## Deferred (do not build now)
 

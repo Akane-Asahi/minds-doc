@@ -7,7 +7,7 @@ been explored.
 **Challenges it answers:** dense text is slow to read; hard to tell relevant results; organizing
 found information; losing the thread.
 **Load with:** 01-core.md, accessibility.md, F2 (scores and reasons come from there).
-**Status:** UI in progress (U2, on the Baseline SERP copy at `/ui/serp`): Search Direction dropdown, the three-row right panel and direction chips (with `>>` and `?`) are built; the header Saved Results toggle and the promote / add behaviour are not. Wired in I3 (2026-10-21): the live SERP at `/workspace/:id/serp` (see "As built (I3)" below and in F2). Not yet checked in a browser, by keyboard or with a screen reader. Wired in I4 (2026-10-22): the New pill from real scores, the rows of "What you might explore", promote, dismiss and the New-pill save (F4 "As built (I4)"). The Saved results view and the header toggle were wired in I6.
+**Status:** UI in progress (U2, on the Baseline SERP copy at `/ui/serp`): search icon on each direction (the dropdown was removed 2026-10-24), the three-row right panel and direction chips (with `>>` and `?`) are built; the header Saved Results toggle and the promote / add behaviour are not. Wired in I3 (2026-10-21): the live SERP at `/workspace/:id/serp` (see "As built (I3)" below and in F2). Not yet checked in a browser, by keyboard or with a screen reader. Wired in I4 (2026-10-22): the New pill from real scores, the rows of "What you might explore", promote, dismiss and the New-pill save (F4 "As built (I4)"). The Saved results view and the header toggle were wired in I6.
 
 ## Result card (top to bottom)
 
@@ -49,7 +49,7 @@ Each chip shows a star, the score number, and the direction label, followed by a
 - **Clicking a chip saves the result under that direction.** It is the only way to save; no opening
   or reading first. One result can be saved under several directions. **Clicking a saved chip
   again undoes the save.**
-- A saved chip shows a check icon and the text "Saved", a visual change, and `aria-pressed="true"`.
+- A saved chip shows a check icon (no "Saved" text since 2026-10-25), a visual change, and `aria-pressed="true"`.
 - `?` is its own button (`aria-expanded`), never nested in the chip. It toggles the one-sentence
   reason in place and never saves. If the reason is null, fetch it (F2 "Reasoning on demand").
 - Save and unsave update the UI immediately (optimistic), call the endpoints, and roll back with a
@@ -91,7 +91,7 @@ seen first, up to `SUGGESTION_LIMIT` (3). A dashed, faded row per suggestion: la
 (promote) and a `×` (dismiss). No circle (the design drops it). If there are none, **hide the row** (no
 empty header).
 - Activating a row (the label or the `+`) promotes it (`POST /api/emerging-directions/:id/promote`): it moves into row 1,
-  joins the Search Direction dropdown, and is included in future scoring. Results already on screen keep their scores
+  joins the directions panel (with its own search icon), and is included in future scoring. Results already on screen keep their scores
   and gain chips for it only where a score already exists.
 - `×` dismisses it (`.../dismiss`); its New pills disappear from the cards too.
 - Faded style: same contrast and text-cue treatment as faded chips (text at least 4.5:1).
@@ -129,16 +129,19 @@ saved anywhere in the workspace). While that view is open it reads **Return to S
   result is saved under, and a chip does what the bookmark did (unsave under that direction; unsaving the last chip
   removes the result from the list, dimmed while it leaves, with a visible message if the call fails).
   Which direction a saved result is filed under is the `savedresults` link row (SavedDoc vs `savedresults`, open-questions.md 3).
-- Light blue = 2px blue border + the text "Best on page" + the accessible-name suffix "best match on this page";
-  solid blue = check icon + "Saved". Provisional (open-questions.md 4).
-- The Search Direction dropdown is beside the workspace breadcrumb, right-aligned. Choosing a direction re-runs the
-  search with that direction's stored query; mock results are not re-ranked (ranking is I2).
+- Best on page (Telot, 2026-10-25) = no text and no light-blue fill: the chip looks exactly like the others except its score and star are blue; the accessible name keeps the suffix "best match on this page";
+  solid blue = check icon, no text. Provisional (open-questions.md 4).
+- There is no Search Direction dropdown (removed 2026-10-24, F2). Each direction row in the panel has a search icon that makes it
+  active and writes its stored query in the search box; the search box then searches it. On the mock SERP the icon still re-runs
+  the mock search at once; mock results are not re-ranked (ranking is I2).
 
 ## As built (I3)
 
 - **Chips** come from the real scores through `buildPills` (top three above 0, `>>` for the rest including 0, light blue once per batch of 10). A direction with no score for a result shows no chip. `?` shows the stored reason at once, or fetches it once (`POST .../reasoning`, stored by the server, so the same words show next time); a failed fetch says so and opening `?` again tries again. A card with no description says "No description available" (the text is never generated); the meta line is `Article · 2022 | Authors: Name01, Name02`.
 - **Save and unsave** are optimistic: chip, count, bar segment and the polite live region ("Saved under Public parks. 3 results saved.") change at once; a failed call puts that chip back with a visible message ("Could not save the result under X. Try again."). Calls for one chip run in the order clicked. **Chips write only `savedresults`**: the Baseline `SavedDoc` is not written (the Saved results view, I6, is built from `savedresults` + `resultscache`), so Baseline's saved-documents list does not show MINDS saves. Clicking a title marks the result opened (`POST /api/results/:id/open`, logging only).
-- **Add search direction** (row 3) opens an inline field with Plan Workspace's rules (7 words at most, a typed 8th word ignored, "N of 7 words", Enter adds, Escape cancels and focus returns to the button). `PATCH /api/workspaces/:id/subgoals` appends it last and selected; it joins the dropdown and the panel with a count of 0, and the live region says to choose it in Search Direction. A failure keeps the field open with a message.
+- **Add search direction** (row 3) opens an inline field with Plan Workspace's rules (7 words at most, a typed 8th word ignored, "N of 7 words", Enter adds, Escape cancels and focus returns to the button). `PATCH /api/workspaces/:id/subgoals` appends it last and selected; it joins the panel with a count of 0, and the live region says to press its search icon to write its search words in the search box. A failure keeps the field open with a message.
+
+- **Unscored direction chip (Telot, 2026-10-25).** A direction with no score for a card (for example one added with "Add search direction" after the list loaded) shows as a fourth chip before `>>` with "?★" instead of the score; clicking it saves under it as usual. Its "?" explains: no score yet, press the direction's search icon in the right panel, then search, to get results scored for it. No LLM call.
 
 ## Out of scope
 

@@ -55,7 +55,7 @@ together with the selected ones, and F3 decides whether a card shows the New pil
 - **Promote** (row in "What you might explore", or clicking a New pill): create a `subgoal`
   (`source: 'ai'`, `suggestionKind: null`, next `orderIndex`), mark the emerging direction
   `promoted`, re-point its `resultscores` to the new `subGoalId`. It then appears in "What you have
-  explored" and the dropdown and is scored as a normal direction.
+  explored" and is scored as a normal direction.
 - **Dismiss:** mark `dismissed`; never suggested again.
 - Every suggestion is optional and dismissible in one tap, with its reasoning available (rule 4).
 
@@ -80,7 +80,7 @@ together with the selected ones, and F3 decides whether a card shows the New pil
 - **Dismiss** (`.../dismiss`): `dismissed`; idempotent; a promoted one is 409 `PROMOTED`. Both answers carry the suggestions that remain.
 - **New pill save**: `POST /api/results/:id/save` with `emergingDirectionId` promotes and writes the link row in the same transaction (the row is written with the transaction session; on a standalone MongoDB a failed save undoes the promote). A suggestion already promoted saves under the direction it became; a dismissed one is 404.
 - **`?` on a New pill**: `.../reasoning` with `emergingDirectionId` (stored reason, or generated once and stored); after promotion the same call is answered through the direction it became.
-- **Live SERP** (`features/mindsSerp/useLiveSerp.js`): the rows of "What you might explore" are the server's suggestions; the `+` or the row promotes (the direction joins the dropdown with a count of 0 and the cards already on screen follow it: a New pill becomes an ordinary chip in the same place, a card that had a score but no pill gets it under `>>`, a card with no score is untouched); `×` dismisses at once and puts the row back with a message if the server cannot record it; a search answer computed before a dismiss cannot bring it back. A New pill click is not optimistic (the server must add the direction first) and says so in the live region. Each row has a "?" ("Why? <label>") that shows the suggestion's reason; the New pill's own `?` explains its score. The cards' New pills are decided once per batch from the suggestions known then, so a suggestion created later gets pills from the next search on (F4: "from the next search on").
+- **Live SERP** (`features/mindsSerp/useLiveSerp.js`): the rows of "What you might explore" are the server's suggestions; the `+` or the row promotes (the direction joins the panel with a count of 0 and the cards already on screen follow it: a New pill becomes an ordinary chip in the same place, a card that had a score but no pill gets it under `>>`, a card with no score is untouched); `×` dismisses at once and puts the row back with a message if the server cannot record it; a search answer computed before a dismiss cannot bring it back. A New pill click is not optimistic (the server must add the direction first) and says so in the live region. Each row has a "?" ("Why? <label>") that shows the suggestion's reason; the New pill's own `?` explains its score. The cards' New pills are decided once per batch from the suggestions known then, so a suggestion created later gets pills from the next search on (F4: "from the next search on").
 
 ## Out of scope
 

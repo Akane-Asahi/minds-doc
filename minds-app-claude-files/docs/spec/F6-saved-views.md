@@ -11,7 +11,7 @@ re-searching and without extra reading.
 
 `direction` and `session` are each optional. Omitting a filter widens the scope; omitting both shows
 every result saved anywhere in the workspace. The view **looks the same as the SERP** (F3 cards) but
-without the search field, the dropdown, and the right-hand panels. It makes **no Primo calls** in any
+without the search field and the right-hand panels. It makes **no Primo calls** in any
 state and **no LLM calls except one**: tapping `?` on a chip whose stored reason is null calls the
 on-demand reasoning endpoint (F2), which reads stored metadata only and stores the result. Scores and
 reasons otherwise come from the stored values.
@@ -40,12 +40,20 @@ reasons otherwise come from the stored values.
   all-sessions view shows the sum of the tile totals, a direction view equals that direction's circle, a session
   view equals that session's tile. Each has a screen-reader label ("9 saved results"). They update when a chip
   is toggled in this view.
-- **Right of the list stays empty** (no right-hand panels); the list is about 72% wide.
+- **Right panel (Telot, 2026-10-25; it was empty before):** "Directions with saved results" lists, by name with a plain
+  saved count (distinct results, rule 1), "All directions" first and then every direction that has saved results in the
+  session scope, in `orderIndex` order. Choosing a name filters the list to results saved under it (the `direction`
+  filter, set in the URL with `replace`; no new request, chips toggled here are kept); choosing it again or "All
+  directions" clears the filter. The chosen button is solid blue with white bold text (no hover change) and `aria-pressed` (not colour alone);
+  the other names stay listed while one is chosen. A `session` filter from the URL still narrows what the panel lists.
+  The list takes the rest of the width (the panel is the SERP's right-column width); on narrow screens it stacks below.
+  The page asks the server for the session scope only and applies the direction filter itself; a `direction` that is
+  not a direction of the workspace shows "Saved results not found".
 
 ## Cards, groups and order
 
 - **Card:** the SERP card chrome (type icon and label, title, `year · authors`, Primo description) with the
-  chips under it, **only the directions the participant saved it under** (solid blue, score and the text "Saved",
+  chips under it, **only the directions the participant saved it under** (solid blue, score and a check icon, no "Saved" text,
   ordered as the directions are). Other scored directions are never shown here. `?` opens the one-line reason in
   place. No "Why this may help" label.
 - **Groups by session:** unless a `session` filter is set, results are **grouped under a heading per session,
