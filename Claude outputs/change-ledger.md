@@ -21,6 +21,30 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 
 ---
 
+### 2026-10-25 · 349a106 · SERP chips: score and star removed; order shows fit
+- Change: tags on a result show no score or star; the left-most tag is the best fit and the rest follow. Results are ordered by the active sub-goal's score, best first (each page of 10 on its own). Scores are still computed and kept (code is commented out, not deleted).
+- Why: Telot, 2026-10-25: the star idea is gone for good; the order of the tags and of the results tells the user what fits best (for the CHIIR demo paper)
+- Affects: plan Abstract, §2.1 to 2.3, §3, §5, Keeping the Searcher in Control, Implementation Note, Task List; Figs 2.1 to 2.3, 3, 4; spec F3
+- Doc status: v30
+
+### 2026-10-25 · 6195d45, 40f4e09 · Directions panel and Overview cards: total bar with count thumb; session segments and number circle hidden
+- Change: (from the commit subjects, not re-read) the SERP panel and the Overview cards show one total bar with a count thumb, a search icon on the left and a grey name for never-searched directions; session segments and the number circle are hidden.
+- Why: not stated
+- Affects: plan §4 (describes circles and per-session segments), Figs 2 and 5; spec F3, F5
+- Doc status: pending
+
+### 2026-10-25 · 7d91ee4, ca96c3e, d32df64, f6bb349, aad78da, 5de1dd6 · Header and title-card changes on the Overview and Saved results
+- Change: (from the commit subjects, not re-read) Saved Results button moves before Continue Last Activity; Saved results gets the Overview's title card; Overview button (eye icon) in the header; workspace name on the Overview links to its Plan page.
+- Why: not stated
+- Affects: plan §3, §4, §5; Figs 3, 4, 5; spec F5, F6
+- Doc status: pending
+
+### 2026-10-25 · 8c79d63, 1e6f305 · New-direction explanation reworded; New tag blue everywhere
+- Change: (from the commit subjects, not re-read) the explanation names the saved results, says the topic kept appearing, then how it helps the goal; "?" beside the New tag opens it on the Overview.
+- Why: not stated
+- Affects: plan §2.2; spec F4
+- Doc status: pending
+
 ### 2026-10-25 · bdac003 · SERP panel: bar overflow shows as "+N" inside the bar
 - Change: past 10 saved, the results-page directions panel clips the bar and shows "+N" inside the right end of the bar, with no "more" text. The Overview still shows "+N more" in the title row.
 - Why: not stated

@@ -27,6 +27,12 @@ v30 is v29 plus text edits that bring the planning document in line with the min
 - A sub-goal added later is rated from the next search on.
 - New workspace: the first screen opens with the title field ready, and the title can be left empty (was "with its own title").
 
+**Stars and numbers removed from the results page (2026-10-25, commit 349a106; Telot: removed for good, for the CHIIR demo paper)**
+- Fit is now shown by order only. The tag order on each result runs from best fit to weaker fit, and the results are ordered by fit to the sub-goal being searched, best at the top. Ratings (0 to 5) are still computed and stored but never shown.
+- Rewritten in: Abstract; 2.1 (three paragraphs); 2.2 and its closing line; 2.3; 3; 5; Keeping the Searcher in Control; Implementation Note; Task List (relevance ordering). The best-on-page blue score and the "?★" chip are gone from the text.
+- Accuracy note: the first page of results is sorted once by the active sub-goal's rating; each "Load more" page of 10 is sorted among itself and added below, so "best at the top, falling down the page" holds within each page of 10, and the text says so.
+- Still true and kept: the Plan-screen star after AI-proposed sub-goals (a different star).
+
 **3 Organization**
 - Saved tag shows a check mark.
 - New right panel "Directions with saved results" with counts and an in-place filter; Return goes back to the Overview (no search box) when the view was opened from the Overview.
@@ -65,6 +71,7 @@ Found by reading minds-app a52ed50 (2026-10-25). Not edited, because they go bey
 ## Figures are out of date and need new screenshots
 
 The text edits above are not matched by the images. Replace these:
+- **Fig 2.1 to 2.3, 3 and 4**: chips still show "5★ …" scores. Re-take them without scores.
 - **Fig 1**: shows "Plan your new project", three fields, a sparkle on every row (including Jamie's own sub-goals, which now carry a person icon instead), a dashed "Add search direction" and no Edit/Remove. Code has two fields, three bordered panels, Edit and Remove on every row, Generate more and Add Custom.
 - **Fig 2.1 to 2.3**: still show the Search Direction dropdown, "DIRECTIONS YOU HAVE EXPLORED", light blue best chips and a sparkle on AI sub-goals.
 - **Fig 3 and Fig 4**: right side empty; two counts shown, code has three; "Description:" label and "Journal article" type label that the code does not have.
