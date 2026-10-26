@@ -33,6 +33,12 @@ v30 is v29 plus text edits that bring the planning document in line with the min
 - Accuracy note: the first page of results is sorted once by the active sub-goal's rating; each "Load more" page of 10 is sorted among itself and added below, so "best at the top, falling down the page" holds within each page of 10, and the text says so.
 - Still true and kept: the Plan-screen star after AI-proposed sub-goals (a different star).
 
+**New directions (2026-10-25, Telot's description)**
+- No "What you might explore" panel on the results page. A suggestion shows as a "New" tag on result cards, placed in the tag order by its fit, and in a "New directions" section on the Overview with "?" (how it came to be suggested), plus (adds it to the unselected list) and cross (dismiss).
+- Rewritten in 2.2 (two paragraphs), 5 and Keeping the Searcher in Control.
+- Code mismatch to settle: the plus button currently adds the direction as selected (`emergingService.js:233`). The text says unselected.
+- Figures: Fig 2.3 still shows the panel; Fig 5 has no "New directions" section.
+
 **3 Organization**
 - Saved tag shows a check mark.
 - New right panel "Directions with saved results" with counts and an in-place filter; Return goes back to the Overview (no search box) when the view was opened from the Overview.

@@ -21,6 +21,13 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 
 ---
 
+### 2026-10-25 · 1e6f305, 8c79d63 · Overview "New directions" section: plus, cross and "?" (Telot's description, 2026-10-25)
+- Change: suggested new directions appear as a tag in the order of chips on result cards (placed by score) and in a "New directions" section on the Overview, each with New tag, "?" (explains how it came to be suggested), plus and cross. Telot: the plus adds it to the UNSELECTED list.
+- Why: no separate suggestions list on the results page; the participant decides on the Overview
+- Affects: plan §2.2, §5, Keeping the Searcher in Control; Fig 2.3 (panel), Fig 5 (no section); spec F4, F5
+- Doc status: v30
+- CODE MISMATCH: `promoteEmerging` (backend/services/emergingService.js:233) creates the direction with `selected: true` and flips an existing unselected one to selected, and YourSessionsPage.jsx:102 says "Add puts the suggestion in the plan (selected)". The text follows Telot's description (unselected). Fix the code or the text.
+
 ### 2026-10-25 · 349a106 · SERP chips: score and star removed; order shows fit
 - Change: tags on a result show no score or star; the left-most tag is the best fit and the rest follow. Results are ordered by the active sub-goal's score, best first (each page of 10 on its own). Scores are still computed and kept (code is commented out, not deleted).
 - Why: Telot, 2026-10-25: the star idea is gone for good; the order of the tags and of the results tells the user what fits best (for the CHIIR demo paper)
@@ -43,7 +50,7 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 - Change: (from the commit subjects, not re-read) the explanation names the saved results, says the topic kept appearing, then how it helps the goal; "?" beside the New tag opens it on the Overview.
 - Why: not stated
 - Affects: plan §2.2; spec F4
-- Doc status: pending
+- Doc status: v30 (explanation described in 2.2; the blue colour of the tag is not mentioned)
 
 ### 2026-10-25 · bdac003 · SERP panel: bar overflow shows as "+N" inside the bar
 - Change: past 10 saved, the results-page directions panel clips the bar and shows "+N" inside the right end of the bar, with no "more" text. The Overview still shows "+N more" in the title row.
@@ -55,7 +62,7 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 - Change: a suggested new direction now shows only as a "New" tag on result cards. The panel and its add and dismiss rows are gone from the SERP right panel.
 - Why: not stated
 - Affects: plan §2.2, §5 (Cross-Session Support), Keeping the Searcher in Control, Fig 2.3; spec F3, F4
-- Doc status: pending
+- Doc status: v30 (text; Fig 2.3 still shows the panel)
 
 ### 2026-10-25 · 2973394 · Overview asks before opening an unselected direction
 - Change: opening an unselected direction, or Continue Last Activity when the last direction is unticked, shows "Direction not selected … Move it to Selected directions and continue search?"; "Yes, select and search" selects it and opens the results page.
