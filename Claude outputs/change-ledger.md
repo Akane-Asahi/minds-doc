@@ -21,6 +21,12 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 
 ---
 
+### 2026-10-25 · 0fbd7d9 · Result-tag "?" explanation: names the sub-goal, the matching phrase and how it helps the goal; stricter topic match
+- Change: the one-sentence reason behind a tag's "?" now follows three steps (sub-goal in its own words, the phrase in the record that addresses it, how that helps the goal). A result that only covers the sub-goal's wider field is rated at most 1 and its sentence says so plainly. Sentences are written with the ratings for the shown tags; any other sub-goal gets its sentence when "?" is first selected, and it is stored. `scores:reset` clears stored ratings so old wording can be regenerated.
+- Why: Telot, 2026-10-25: the explanation is "better fetched" now
+- Affects: plan 2.1 ("?" paragraph), Implementation Note (scoring paragraph); Fig 2 inset; spec F2, F3
+- Doc status: v30
+
 ### 2026-10-25 · 1e6f305, 8c79d63 · Overview "New directions" section: plus, cross and "?" (Telot's description, 2026-10-25)
 - Change: suggested new directions appear as a tag in the order of chips on result cards (placed by score) and in a "New directions" section on the Overview, each with New tag, "?" (explains how it came to be suggested), plus and cross. Telot: the plus adds it to the UNSELECTED list.
 - Why: no separate suggestions list on the results page; the participant decides on the Overview

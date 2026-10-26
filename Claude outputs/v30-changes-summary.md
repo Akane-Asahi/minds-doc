@@ -39,6 +39,14 @@ v30 is v29 plus text edits that bring the planning document in line with the min
 - Code mismatch to settle: the plus button currently adds the direction as selected (`emergingService.js:233`). The text says unselected.
 - Figures: Fig 2.3 still shows the panel; Fig 5 has no "New directions" section.
 
+**The "?" explanation on a result tag (2026-10-25, commit 0fbd7d9)**
+- 2.1 now says what the sentence does and how it is made. Three steps: name the sub-goal in its own words, say what in the record (title, subject terms, abstract) addresses that exact topic by quoting or paraphrasing a phrase, say how that helps the goal. About 20 words, no hedging, no rating shown. Content follows the rating (high: how it covers it; middle: which part; low: loosely related; 0: what the result is about instead). It must match the sub-goal's specific topic, not only its wider field; no abstract gives "Based on title and subjects only".
+- How it is fetched: written with the ratings for the shown tags (top three above 0, plus the New tag); any other sub-goal gets its sentence the first time "(?)" is selected ("Loading the reason…", retry by closing and opening). Stored with the rating, so the same words show every time.
+- Implementation Note: the scoring paragraph now mentions the reason's three parts and the stricter rubric (a shared general word earns 0, a match to only the wider field earns at most 1).
+- The example sentence in 2.1 is an illustration written for Jamie's goal, not output from the app.
+- Sentences already stored keep their old wording until `npm run scores:reset` is run (stored ratings are final).
+- Figures: the inset in Fig 2 shows an older sentence.
+
 **3 Organization**
 - Saved tag shows a check mark.
 - New right panel "Directions with saved results" with counts and an in-place filter; Return goes back to the Overview (no search box) when the view was opened from the Overview.
