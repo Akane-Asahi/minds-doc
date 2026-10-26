@@ -2,6 +2,6 @@
   "_about": "Sync marker. Everything in minds-app up to minds_app_commit has been looked at when planningDoc was written. What the text still lacks is listed in change-ledger.md as 'Doc status: pending'. Update this when a new planning-doc version is cut.",
   "planningDoc": "v30",
   "file": "Telot Thesis Planning Documents v30.docx",
-  "minds_app_commit": "a52ed5029357034cd98457b00cf94cab857ce31e",
-  "synced": "2026-10-25"
+  "minds_app_commit": "2f08f2c258d1b2fbeb481f146f3419796af3752a",
+  "synced": "2026-10-26"
 }

@@ -91,6 +91,33 @@ The text edits above are not matched by the images. Replace these:
 - **Fig 3 and Fig 4**: right side empty; two counts shown, code has three; "Description:" label and "Journal article" type label that the code does not have.
 - **Fig 5**: S3/S2/S1 badges, a "Community access +0" pill, arrows instead of tick circles, no Unselected list, no Running status, no header card, dashed "Add search direction".
 
+## Run of 2026-10-26: all four diff agents against minds-app 2f08f2c
+
+Text edited in v30 (26 edits, code treated as current wherever it carries a dated decision by Telot):
+- **1.1**: marks are black and follow a direction's name on every screen; generation starts when a field is left with both texts filled and replaces only unticked proposed directions; Generate more is hidden while Add Custom is open; a direction with saved results comes back unticked at the end if removed or renamed.
+- **2.1**: saved tag is solid blue, no check mark. **2.2**: New tag can sit anywhere (up to four tags); the Overview explanation names up to three saved titles, says the topic kept appearing and looks highly relevant, then one sentence on how it helps; a cross on the New tag dismisses it. **2.3**: from the Overview search icon the query is only typed, not searched; Add search direction on the results page starts selected.
+- **3**: right panel has no "All directions" row, several names can be chosen, Reset clears; saved cards show tags in planning order; title card, breadcrumb and one Return button ("Return to Workspace" / "Return to Search"); one view with two filters; "?" on a saved tag can write its sentence on first use.
+- **4**: panel rewritten to what is shown: name, mark, search icon, one plain bar with the count inside, grey name until something happened, "10+" past 10, name or bar opens saved results; no circle, no session segments, no session colours, no "+N more" on bars. Overview: header card says "Workspace" and holds Saved Results; tick circle, marks, name and search icon behaviour, the "Direction not selected" question; tile entries are per visit (fixes the "at most six sub-goals" slip); "saved or shown".
+- **5**: the Saved Results button is in the Overview header card; name or bar (not circle or segment) opens a direction's results; Workspace button on the results page leads back. **Task List**: "per-session progress bars" now "progress bars".
+- Ledger: the six pending entries are closed as v30; a new entry covers e1506e3, f5672f1, c1c940b, 6280091, 6e38937, 81aec93, 2f08f2c. Sync marker moved to 2f08f2c.
+
+Not edited, waiting for Telot (each was found by the agents):
+1. Plus button and New-tag click add the direction **selected** in code; v30 says unselected for the plus button. The New-tag click has to stay selected (the results page lists selected directions only).
+2. **One model for every call** (`LLM_MODEL`); 1.1, 1.2 and the Implementation Note still say a capable model for sub-goals and a lighter one for queries.
+3. Session segments and the number circle are "hidden for now" by two flags. v30 now follows the shipped look; switch the flags back on and the old text would need restoring.
+4. "The rubric is set empirically against searchers' own judgments" (Implementation Note): the scoring bench compares prompt variants against run-to-run noise only.
+5. Screen readers hear "score N out of 5" on tags and "best match on this page", against "the searcher never sees these numbers".
+6. Return after choosing a name in the Saved results panel probably loses "opened from the Overview" (search box returns, Return goes to the results page). Return to Search goes to the first chosen direction, not the one left.
+7. Ticking a direction on the Overview moves it in the saved order, so ties no longer follow only the Plan-screen order.
+8. No keyboard way to reorder directions (mouse and touch only).
+9. End Session link on the results page (cuts sessions in the study logs); after End Session the tile still reads "Running" for up to an hour (`overviewController.js:59`).
+10. Last Query card shows the newest stored query for the last direction, which may never have been run.
+11. Cards on the first page appear in library order and re-sort when ratings arrive (a few seconds).
+12. Implementation Note counts four AI components; the code also has the on-demand reason call (5.3r).
+13. Overview h1 is "Workspace" in code; v30 prose still calls the screen "Workspace Overview".
+
+Figures still show the 2026-10-20 design and need new screenshots from 2f08f2c: Fig 1; Figs 2.1 to 2.3 (dropdown, scores, "Why this may help" line, circles, segments, the "What you might explore" list in 2.3); Figs 3 and 4 (header button, scores, no title card, no right panel, two counts); Fig 5 (Project Overview title, S badges, circles, segments, no Unselected list, no New directions section). Fig 1 caption could read "Plan Workspace".
+
 ## Method
 
 Four read-only diff agents compared v29 with minds-app 209f0cd by reading the code. Nothing was run, and nothing was checked in a browser, by keyboard or with a screen reader. The planning document's v29 text came from the minds-doc repo (commit 5c08af8).

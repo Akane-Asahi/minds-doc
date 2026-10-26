@@ -14,12 +14,18 @@ Entry format:
 - Change: what is different for the participant
 - Why: the reason, in Telot's words; "not stated" if nobody said
 - Affects: planning-doc sections and figures; spec files
-- Doc status: pending | vNN | n/a
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old) | vNN | n/a
 ```
 
 Entries below the line marked SEEDED were rebuilt from minds-app commit history on 2026-10-25, not written at the time, so "Why" is mostly not stated. Fill it in from DECISIONS.md where you know it.
 
 ---
+
+### 2026-10-25 · e1506e3, f5672f1, c1c940b, 6280091, 6e38937, 81aec93, 2f08f2c · Marks on every screen, plain total bars, saved-results filter and title card
+- Change: (read from the code at 2f08f2c by the four diff agents) direction marks are black (star = LLM, person = own) and follow the name on every screen; the number circle and per-session bar segments are switched off (`SHOW_COUNT_CIRCLE`, `SHOW_SESSION_BAR` = false, "hidden for now") and every bar is one plain blue bar with the count inside, "10+" past 10; the name and the bar open that direction's saved results; the saved tag has no check mark; Saved results has a multi-select direction filter with Reset (no "All directions" row), the Overview's title card, and one "Return to Search" / "Return to Workspace" button; the results-page header has a "Workspace" button, no Saved Results button; Add Custom hides Generate more.
+- Why: Telot's dated decisions in code comments (2026-10-25); no reasons recorded
+- Affects: plan 1.1, 2.1, 2.2, 2.3, 3, 4, 5, Task List; Figs 1, 2.1 to 2.3, 3, 4, 5
+- Doc status: v30 (text rewritten 2026-10-26; figures still old)
 
 ### 2026-10-25 · 0fbd7d9 · Result-tag "?" explanation: names the sub-goal, the matching phrase and how it helps the goal; stricter topic match
 - Change: the one-sentence reason behind a tag's "?" now follows three steps (sub-goal in its own words, the phrase in the record that addresses it, how that helps the goal). A result that only covers the sub-goal's wider field is rated at most 1 and its sentence says so plainly. Sentences are written with the ratings for the shown tags; any other sub-goal gets its sentence when "?" is first selected, and it is stored. `scores:reset` clears stored ratings so old wording can be regenerated.
@@ -44,13 +50,13 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 - Change: (from the commit subjects, not re-read) the SERP panel and the Overview cards show one total bar with a count thumb, a search icon on the left and a grey name for never-searched directions; session segments and the number circle are hidden.
 - Why: not stated
 - Affects: plan §4 (describes circles and per-session segments), Figs 2 and 5; spec F3, F5
-- Doc status: pending
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old)
 
 ### 2026-10-25 · 7d91ee4, ca96c3e, d32df64, f6bb349, aad78da, 5de1dd6 · Header and title-card changes on the Overview and Saved results
 - Change: (from the commit subjects, not re-read) Saved Results button moves before Continue Last Activity; Saved results gets the Overview's title card; Overview button (eye icon) in the header; workspace name on the Overview links to its Plan page.
 - Why: not stated
 - Affects: plan §3, §4, §5; Figs 3, 4, 5; spec F5, F6
-- Doc status: pending
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old)
 
 ### 2026-10-25 · 8c79d63, 1e6f305 · New-direction explanation reworded; New tag blue everywhere
 - Change: (from the commit subjects, not re-read) the explanation names the saved results, says the topic kept appearing, then how it helps the goal; "?" beside the New tag opens it on the Overview.
@@ -62,7 +68,7 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 - Change: past 10 saved, the results-page directions panel clips the bar and shows "+N" inside the right end of the bar, with no "more" text. The Overview still shows "+N more" in the title row.
 - Why: not stated
 - Affects: plan §4 (text says "+N more" at the right end of the name line), Fig 2; spec F3
-- Doc status: pending
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old)
 
 ### 2026-10-25 · 2973394 · "What you might explore" panel removed from the results page
 - Change: a suggested new direction now shows only as a "New" tag on result cards. The panel and its add and dismiss rows are gone from the SERP right panel.
@@ -74,13 +80,13 @@ Entries below the line marked SEEDED were rebuilt from minds-app commit history 
 - Change: opening an unselected direction, or Continue Last Activity when the last direction is unticked, shows "Direction not selected … Move it to Selected directions and continue search?"; "Yes, select and search" selects it and opens the results page.
 - Why: the results page lists selected directions only
 - Affects: plan §4 and §5; spec F5
-- Doc status: pending
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old)
 
 ### 2026-10-25 · 2973394 · Return button reads "Return to Overview" from the Overview
 - Change: the Saved results header button says "Return to Overview" when the view was opened from the Overview (was "Return to Search").
 - Why: not stated
 - Affects: plan §3 (Return behaviour is described, the label is not); spec F6
-- Doc status: pending
+- Doc status: v30 (rewritten 2026-10-26 to match 2f08f2c; figures still old)
 
 ### 2026-10-25 · 2973394 · Plan screen error text says "Fill both fields"
 - Change: the 400 error text said "three fields"; there are two.
