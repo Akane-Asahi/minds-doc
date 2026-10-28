@@ -1,214 +1,254 @@
 # SERP diff: code vs plan
 
-Generated: 2026-10-20 00:15 (Regina time) by serp-diff
-Plan document used: `Claude outputs/Telot Thesis Planning Documents v27.docx` (version 27, internal date "Project Revised: (Oct 15, 2026)", last commit to the file 9687698, 2026-10-17)
-Code checked: Akane-Asahi/minds-app @ ba707ba48c21172c85a607d13f3cca9259e4ff12 (2026-10-19 20:38 -06:00), branch main. minds-doc @ fc321d45366acb135f2f6ac193422c09ca3ad3a8 (2026-10-19 22:28 -06:00)
-Scope: whole SERP (header, query, result cards, chips, right-hand panel, new directions, switching, monitoring cues, saving from the SERP). The Saved results view, Your sessions and Plan Workspace are other screens; they are touched only where the SERP links to them.
+Generated: 2026-10-28 09:30 (Regina time) by serp-diff
+Plan document used: `Claude outputs/Telot Thesis Planning Documents v30.docx` (version 30, internal date "Project Revised: (Oct 25, 2026)", last commit to the file 4fa3494, 2026-10-26 00:00 -06:00)
+Code checked: Akane-Asahi/minds-app @ 533d618 (full SHA 533d618c36be06d240a2640842179a4f2ad22676, 2026-10-27 15:31 -06:00), branch main. minds-doc @ 4fa3494 (full SHA 4fa3494f066a17457b07a88acf4088b41fac58c4, 2026-10-26 00:00 -06:00), branch main
+Scope: whole SERP (header, query and search box, result cards, direction tags, "(?)" sentences, "New" tags, right-hand panel, switching and adding sub-goals, progress bars, saving from the SERP). The Plan screen, Workspace Overview and Saved results view are other screens; they are touched only where the SERP links to them or shares a rule with them.
 
 > Warnings:
-> 1. **The SERP a participant reaches today is plain Baseline.** The route `/workspace` renders `features/workspace/pages/WorkspaceView` and `features/search/*` (`frontend/src/app/router/index.js:19,32-38,92-93`), which contain none of the MINDS layer. Everything MINDS on the SERP (chips, `>>`, `?`, Search Direction dropdown, right panel) exists only on the development route `/ui/serp`, runs on mock fixtures, and is excluded from production builds (`router/index.js:24-27`, `ui-dev/SerpDevPage.jsx`). "UI only" in this brief means exactly that.
-> 2. Read-only run: no clone, pull, fetch, checkout, commit or push was done. Nothing was run (no tests, no browser). All claims come from reading files.
+> 1. **The code is newer than the plan text on the most visible SERP rules.** Several differences below trace to code comments dated 2026-10-26 and 2026-10-27 (score and star shown again, no cap of three tags, no ">>" button). The plan v30 text and the in-repo spec both date from 2026-10-25 or earlier. Where the code carries a dated decision, it may be the plan that is behind.
+> 2. **The plan's own SERP figures (Fig 2.1, 2.2, 2.3) show the old design**, not the plan's text (see section 6). The figure images in the docx are dated 2026-10-20.
+> 3. **The in-repo spec is not in minds-app at this SHA.** `minds-app` has no `CLAUDE.md`, `STATUS.md`, `DECISIONS.md`, `docs/spec/` or `docs/design/` (its `docs/` holds only `commands.md`, `font-size-change.md`, `font-weight-change.md`). The nearest copy is the mirror at `minds-doc/minds-app-claude-files/` (STATUS last updated 2026-10-25). Section 6 uses that mirror and says so.
+> 4. Read-only run as the caller asked: no clone, pull, fetch, commit or push was done, and the repos were used as found. Nothing was run (no tests, no browser, no backend, no model calls). Every statement about the code comes from reading files. The brief cannot say whether the minds-app clone is still the newest commit on GitHub.
+> 5. This file replaces an earlier `serp-diff.md` (plan v27 against code ba707ba, dated 2026-10-20).
 
 ## 1. Summary
 
-- The planning document (v27) and the in-repo spec (`docs/spec/F2`, `F3`, `F4`) agree on almost every SERP rule (top-three tags, 0 to 5 scores, `>>`, light/solid blue, New tag, panel rows, counts, query stored once per direction). The pieces that are built match them; the gap is that **almost none of it runs on real data yet**.
-- Biggest code gaps (all scheduled in `docs/spec/build-plan.md`): no query generation (5.2), scoring (5.3) exists only as a prompt, schema and smoke script and is not called by any route, no stored scores, no save-under-direction write, no new-direction detection (5.6). Without these the study cannot be run as the plan describes it.
-- Biggest plan-vs-code differences that are not just "not wired yet": the plan says the right-panel rows switch direction (code: only the dropdown does), the plan says `(?)` opens a "window" (code: toggles one sentence in place), and the plan's Task List still describes an embedding-based 1 to 5 star rating and a "Suggested Next Step" that the plan body, spec and code have dropped.
-- The plan is silent on whether results are re-ordered by the active direction's score. The spec says yes (and that new directions never affect ranking). This decides what the study measures.
-- Plan wording needs about ten edits (listed in the hand-off message and in sections 5 and 6).
+- The live SERP is the MINDS one (`MindsSerpPage` at `/workspace/:id/serp`), wired to real endpoints (Primo, scoring, saving, new-direction detection). Almost everything in the plan about queries, switching, ordering, the "(?)" sentences, saving and the progress bars is built and matches. Nothing on the live SERP is mock-only.
+- **Biggest difference 1: the rating is visible.** Plan v30 says the searcher never sees the numbers and fit is shown by order only. The code shows "N star" on every tag, and screen readers hear "score N out of 5" (`DirectionChip.jsx:61-62,77`). The code comment says the SERP shows them again since 2026-10-26; the plan says they were removed for good on 2026-10-25.
+- **Biggest difference 2: no cap of three tags and no ">>".** Plan: three tags, then ">>" reveals the rest including rated 0. Code: every sub-goal rated above 0 is a tag, a 0 shows nothing, and there is no way to file a result under a sub-goal rated 0 (`buildPills.js:21-23`; test `minds.test.jsx:151`). The code comment cites Orland, 2026-10-27.
+- **Biggest difference 3: the "New" tag rule** follows from the previous one: plan says the possible new sub-goal shows when it is among the three highest ratings; code shows it whenever it is rated above 0 (`buildPills.js:26-30`). Also the plus button on the Overview adds a new sub-goal as selected (`emergingService.js:233`), the plan says unselected.
+- Smaller: one model for every LLM call (plan says a capable one for sub-goals and a lighter one for queries); panel heading and button say "sub-goal" where the plan says "Directions for this session" and "Add search direction"; the plan's figures are out of date.
 
-Counts: Matches 4 · UI only 19 · Partial 6 · Differs 5 · Missing 5 · Plan defers 1 · Unverified 0 · Extra 7
-By severity (35 differences, not counting Matches and Plan defers): Blocker for the study 5 · Important 15 · Minor 15. Extra items are all Minor and are not in these totals.
+Counts: Matches 33 · UI only 0 · Partial 1 · Differs 7 · Missing 1 · Plan defers 1 · Unverified 2 · Extra 11
 
 ## 2. Which plan document was used
 
-Helper: `agents/plan-diff/find_latest_plan_doc.py` run on `Claude outputs/`. Reason given: "highest version number v27". No ties, no warnings.
+Chosen by `agents/plan-diff/find_latest_plan_doc.py` ("highest version number v30"). No warnings from the helper, no tie. The docx carries no Word comments (`extract_docx_comments.py` reported none), so there is no "plan comment, not yet reflected".
 
 | File | Version | Chosen |
 |---|---|---|
-| Telot Thesis Planning Documents v27.docx | 27 | **yes** |
+| Telot Thesis Planning Documents v30.docx | 30 | yes |
+| Telot Thesis Planning Documents v29.docx | 29 | no |
+| Telot Thesis Planning Documents v27.docx | 27 | no |
 | Telot Thesis Planning Documents v7 - SRL Stripped-3.docx | 7 (-3) | no |
 | Telot Thesis Planning Documents v7 - SRL Stripped-2.docx | 7 (-2) | no |
 | Telot Thesis Planning Documents v7 - SRL Stripped-1.docx | 7 (-1) | no |
 | Telot Thesis Planning Documents v7 - Restructured.docx | 7 | no |
 | Telot Thesis Planning Documents v7 - SRL Stripped.docx | 7 | no |
 
-Checks: v27 discusses the SERP at length (sections 1.2, 2.1 to 2.3, 3, 4, Implementation Note, Figs 2.1 to 2.3). Internal date Oct 15, 2026 is the newest of any file; no older-numbered file has a newer date, so no version/date conflict. The docx has no Word comments (`extract_docx_comments.py` reported none), so there are no "plan comment, not yet reflected" items. Read via pandoc; figure images 2, 2.2, 2.3 were opened (labels: Fig 2.1 query bar, Fig 2.2 SERP, Fig 2.3 "What you might explore" with New).
+The document discusses the SERP in sections 1.2, 2.1, 2.2, 2.3, 3, 4, 5, "Keeping the Searcher in Control", the Implementation Note, the Task List, and Fig 2.1, 2.2, 2.3. The text says it was brought in line with minds-app 2f08f2c / 209f0cd (`v30-changes-summary.md`); the code checked here is later (533d618), so drift since then is expected.
 
-Other documents (not compared): `Claude outputs/technical-specification.md` still describes Plan Strip, Coverage Map, evaluation badges and a `/task/:id/serp` route (lines 90, 268-274 of that file). That is the old design and is stale context only. The sibling folder `claude output/` (wireframe html, slides, persona notes) was listed but not read.
+Other files in the folder were not used as the plan. `technical-specification.md` and `claude output/` were not compared; see section 8.
 
 ## 3. Which code is the live SERP
 
-Live (what a logged-in participant gets at `/workspace`):
-- Router: `frontend/src/app/router/index.js:19` imports `features/workspace/pages/WorkspaceView`; `:32-38` `WorkspaceRoute`; `:92-93` the `/workspace` route. Layout is `frontend/src/layout/Layout.jsx` and `layout/MainHeader.jsx`; results come from `features/search/pages/SerpView.jsx` and `features/search/components/*`. This is the Baseline control. No MINDS component is imported anywhere in this path.
-- Plan Workspace "Explore" ends with `openWorkspace(..., "serp")` (`features/planWorkspace/PlanWorkspacePage.jsx:14`, `features/workspace/api/workspaceNavigation.js:17-21`), i.e. it lands on that Baseline SERP, with no direction and no generated query.
+Route: `frontend/src/app/router/index.js:102` sends `/workspace/:workspaceId/:view` to `MindsSerpPage`. `view` is `serp` or `saved` (`MindsSerpPage.jsx:120`); the SERP stays mounted (hidden) under the Saved results view (`MindsSerpPage.jsx:79-80`). Plan Workspace's Explore navigates to `/workspace/:id/serp` (`PlanWorkspacePage.jsx:23`); the Overview navigates to `.../serp?direction=` (`YourSessionsPage.jsx:168`).
 
-MINDS SERP (dev only, mock data): `/ui/serp`, mounted by `ui-dev/UIDevRoutes.jsx` -> `ui-dev/SerpDevPage.jsx` (in-memory localStorage, `ui-dev/mockApi.js` answering `/api/library/search` and `/api/saveddocs/*`). It renders a copy of Baseline's SERP in `features/serp/`:
-- Page: `features/serp/pages/WorkspaceView.jsx` (right rail holds `DirectionsPanel`, lines 149-153) and `pages/SerpView.jsx`.
-- Layout and header: `features/serp/layout/Layout.jsx` (breadcrumb, total results, `DirectionDropdown` at line 150) and `layout/MainHeader.jsx` (search box, account menu, Saved Results / Return to Search button, lines 157-220).
-- Cards: `components/SearchResult.jsx` -> `components/ResultRow.jsx` -> `components/ResultCardShell.jsx` (footer slot) -> `minds/ChipRow.jsx`, `minds/DirectionChip.jsx`.
-- MINDS layer: `minds/MindsSerpContext.jsx` (state, from `mocks/serpDirections.js`), `minds/buildPills.js` (chip rules), `minds/DirectionDropdown.jsx`, `minds/DirectionsPanel.jsx`, `minds/SavedChips.jsx`.
-- Data: `mocks/serpDirections.js` (directions, scores, reasons, queries, sessions, saved rows) and `mocks/serpDocs.js` (10 mock Primo documents).
+Live (frontend), all read:
+- `features/mindsSerp/MindsSerpPage.jsx`, `MindsSerpLayout.jsx`, `SerpSearchField.jsx`, `SerpResults.jsx`, `useLiveSerp.js`, `serpModel.js`, `mindsSerpApi.js`
+- `features/serp/minds/ChipRow.jsx`, `DirectionChip.jsx`, `buildPills.js`, `DirectionsPanel.jsx` (shared with the MINDS layer; `MindsSerpContext.jsx` is only the mock provider)
+- `features/serp/components/ResultCardShell.jsx`, `features/serp/layout/MainHeader.jsx`, `features/planWorkspace/DirectionRow.jsx` (marks)
 
-Duplicates and legacy: `features/serp/components/SearchResult.jsx` and `VirtualizedSearchResults.jsx` are byte-identical to the `features/search/` copies; `ResultRow.jsx`, `SearchSection.jsx` and `SavedSearchResults.jsx` differ only by the MINDS changes. `features/search/*` is the Baseline control and is deliberately untouched (`DECISIONS.md` 2026-10-17). `shared/components/ResultCardShell.jsx` and `SavedDocumentCard.jsx` are the Baseline originals.
+Live (backend), all read: `controllers/sessionController.js` (search, query, scores, last state), `resultsController.js` (save, reasoning), `emergingController.js`, `services/scoringService.js`, `ranking.js`, `queryService.js`, `emergingService.js`, `savedService.js`, `primoService.js` (read at header level), `llm/client.js`, `llm/prompts.js`, `schemas/*`, `config/constants.js`.
 
-Backend that serves the SERP today: Baseline Primo proxy only (`backend/controllers/libraryController.js:38-113`, `GET /api/library/search`), Baseline `saveddocs` routes, and `PUT/GET /api/workspaces/:id/plan` for the plan. Present but not called by any route: `backend/llm/prompts.js` `buildScoringPrompt` (line 22), `backend/schemas/scoring.js` (Zod schema, clamp), `backend/models/savedResultModel.js` (model, never written by any controller). Absent: query generation (5.2), a scoring route, `resultscores`, `emergingdirections`, `sessions`, `resultscache` models, new-direction detection (5.6), promote/dismiss, reasoning-on-demand, save-under-direction routes (`backend/server.js:26-30` lists only users, workspaces, saveddocs, library, search-directions).
-
-Tests touching the SERP: `features/serp/minds/minds.test.jsx`, `minds/buildPills.test.js`, `ui-dev/*.test.jsx`, backend `__tests__/schemas.test.js`, `models.test.js`. They show intended behaviour; they were not run.
+Not the MINDS SERP:
+- **Baseline SERP (the control):** `/workspace` (`router/index.js:94`) renders `features/workspace/pages/WorkspaceView.jsx`, which imports `features/search/pages/SerpView.jsx`. Contains no MINDS layer.
+- **Dev-only, mock fixtures:** `/ui/serp` (`ui-dev/SerpDevPage.jsx`) mounts the copy at `features/serp/pages/WorkspaceView.jsx` with `MindsSerpProvider` and fixtures from `frontend/src/mocks/`. The route exists only when `NODE_ENV === "development"` (`router/index.js:26-28`). `features/serp/components/ResultRow.jsx`, `SearchResult.jsx`, `SavedSearchResults.jsx`, `pages/SerpView.jsx` are part of that dev copy.
+- **Duplicates:** `features/search/**` and `features/serp/**` are near copies of each other (Baseline); `layout/MainHeader.jsx` and `features/serp/layout/MainHeader.jsx` are two headers, the second is the MINDS one.
 
 ## 4. Requirement matrix
 
-Statuses: UI only = visible on `/ui/serp` on mock data. "Plan" cites section or figure of v27. Dates and ids in code: `path:line`.
+Plan citations use section names of v30 ("§2.1" = "2.1 Evaluation: Relevance and Usefulness of Results"). "Impl." = Implementation Note.
 
 | ID | Plan says (section/fig) | Code does (path:line) | Status | Severity | Notes |
 |---|---|---|---|---|---|
-| R1 | Screen layout: header with query bar, account icon, Saved Results button; breadcrumb with total results; Search Direction control; result list; right panel (Fig 2.2). | All present on `/ui/serp`: `MainHeader.jsx:157-220`, `Layout.jsx:114-150`, `WorkspaceView.jsx:149-153`. Live `/workspace` has the Baseline header and no right panel. | UI only | Minor | Breadcrumb reads "workspaces" (`Layout.jsx:124`), Fig 2.2 says "Projects" (terminology). Search submit icon is on the right (`SearchSection.jsx:279-298`), Fig 2.2 draws it on the left. |
-| R2 | The Saved Results button opens the saved results of the whole project (section 5, Fig 2.2). | Button toggles Saved Results / Return to Search (`MainHeader.jsx:196-220`) to the Baseline saved list (`WorkspaceView.jsx:84-98`). MINDS saved view with chips is a separate dev screen. | UI only | Minor | Live button is Baseline's; works, but without direction chips. |
-| R3 | First time a sub-goal is opened the LLM writes one query from goal, sub-goal and what the searcher knows, and the search starts with it (section 1.2, Fig 2.1). | No call 5.2 anywhere in `backend/` (only prompts for 5.1 `prompts.js:8` and 5.3 `:22`). Dev dropdown reads a fixed string (`serpDirections.js:66-72`). | Missing | Blocker | Scheduled I2 (`build-plan.md`). |
-| R4 | The query is stored per sub-goal; returning to a sub-goal runs the last stored query with no LLM call (sections 1.2, 2.3). | `selectDirection` sends the fixture's query as a search term (`MindsSerpContext.jsx:103-109`); nothing is stored. Baseline `Queries` model has no `subGoalId` or source (`backend/models/queriesModel.js`). | UI only | Important | Scheduled I2. |
-| R5 | Searcher can edit the query and run their own wording at any time; the query they run becomes the stored one for that sub-goal (section 1.2). | Field is editable and submit searches (`SearchSection.jsx:125-145,208-300`). A typed query is saved as a workspace-level Baseline query (`:106-107`), not tied to the active direction; `selectDirection` ignores it (`MindsSerpContext.jsx:106`). | Partial | Important | Editing works; "becomes the stored query for that direction" does not. |
-| R6 | A sub-goal added later gets a generated query, is a place to file results, and results are rated against it (section 2.3). | "Add search direction" button exists but only shows "Mock only" (`DirectionsPanel.jsx:138-145`). No route to add a direction after planning (`PATCH /subgoals` not built). | Missing | Important | Scheduled I3. |
-| R7 | Query generation uses a lighter, faster model than sub-goal generation, which uses the most capable model (sections 1.2, Implementation Note). | One model for every call, from `LLM_MODEL` (`backend/llm/client.js:33-41,121`); there is no per-call model option. `01-core.md` says default cheap model, escalate only if testing shows it is needed. | Differs | Minor | Decision for Telot. Plan vs spec vs code all differ. |
-| R8 | Each card shows type icon and label, title, year and authors, "Description:" with Primo abstract and "Read more" (Fig 2.2; the text of section 2.1 says only "result"). | Icon plus type label (`ResultCardShell.jsx:157-182`), title, one line year, authors, source (`ResultRow.jsx:216-221`), two-line abstract with Read more (`AbstractToggle.jsx`). No "Description:" prefix; no "No description available" text, the abstract row is simply omitted (`DocumentAbstract.jsx:37-39`). | Partial | Minor | `F3` also asks for the label and the empty text. |
-| R9 | Each result shows the three sub-goals it matches most strongly, ordered by rating; rating 0 to 5 shown as a number with one star, e.g. "5 ★ Mental health benefits" (section 2.1). | `buildPills.js:20` (top three, sorted), `DirectionChip.jsx` shows `{score}★ label`. Scores come from the fixture (`serpDirections.js:23-34`). | UI only | Important | Real scores need I2/I3. |
-| R10 | A sub-goal rated 0 is not shown by default; no minimum rating is required (section 2.1). | `buildPills.js:20` keeps only scores above 0. | UI only | Minor | Matches the rule; mock data. |
-| R11 | Tags with equal ratings follow the planning-screen order (section 2.1). | `buildPills.js:5` (tie by `orderIndex`). | UI only | Minor | Plan Workspace drag order feeds `orderIndex`. |
-| R12 | A ">>" button after the last tag reveals the remaining sub-goals, including those rated 0, so a result can be filed under a weaker match (sections 2.1, 3). | Icon-only button "Show other directions", `aria-expanded`, per card (`ChipRow.jsx:60-75`); lists `card.others` including 0-scored. | UI only | Minor | Fig 2.2 does not draw the `>>`. |
-| R13 | Solid blue tag = result saved under that sub-goal (section 2.1). | Saved chip is solid blue with check and "Saved", `aria-pressed` (`DirectionChip.jsx:36-70`). Saved state is in memory (`MindsSerpContext.jsx:46-58`). | UI only | Important | Not persisted per direction; see R19. |
-| R14 | Light blue tag marks the strongest match on the page: top tag of its result, rating equal to the highest tag rating among the 10 results shown (section 2.1). | `buildPills.js:56-59`: top selected chip whose score equals the page best; New pill never light blue. | UI only | Minor | Plan does not say New tags are excluded from "highest tag rating"; spec does. |
-| R15 | "(?)" on each tag opens a window explaining why the result may help with that sub-goal (section 2.1, Keeping the Searcher in Control; Fig 2 inset). Fig 2.2 also draws an always-visible "Why this may help" line under each description. | `?` is a separate button that toggles one italic sentence in place under the chips (`ChipRow.jsx:77-90`, `DirectionChip.jsx:78-86`). No window; no always-visible line (label removed 2026-10-17, `DECISIONS.md`). Reason text comes from the fixture; the fetch is "Mock only" (`ChipRow.jsx:78`). | Differs | Minor | Decision for Telot (window vs in place vs always visible). |
-| R16 | One batched LLM call per page of 10 results scores each result against each sub-goal on a fixed rubric, temperature 0, fixed output structure, metadata only; no embeddings (Implementation Note). | Prompt (`prompts.js:22-44`), Zod schema with floor and clamp (`schemas/scoring.js:7-23`), client default temperature 0 (`client.js:84`). Used only by `scripts/smoke-llm.js`; no route, controller or frontend call. Prompt does not take `known_scores` (spec F2 says it should). | Partial | Blocker | Scheduled I2. Scores measured as not repeatable at temperature 0 (`open-questions.md`). |
-| R17 | Each rating comes with a short reason based on the metadata (Implementation Note). | Prompt writes a reason only for each result's top three directions above 0 and the best new direction, others null (`prompts.js:31`). On-demand reasoning route missing. | Partial | Important | Plan implies a reason for every tag; spec fetches the rest when `?` is tapped (I3). |
-| R18 | The ratings are stored; the three highest per result are displayed (Implementation Note). | No `resultscores` model (`backend/models/` has queries, savedDoc, savedResult, subGoal, user, workspace). | Missing | Blocker | Scheduled I2. |
-| R19 | The tags are the save control: selecting a tag files the result under that sub-goal and fills it solid; selecting again removes it (section 3). | Chip click toggles in memory and optimistic UI with rollback (`MindsSerpContext.jsx:86-100`). The only persistence is Baseline's document save (`ResultRow.jsx:192-214`, first chip saves, last unsave removes). No write of a result-to-direction row: `SavedResult` model exists but no route or controller uses it. | Partial | Blocker | Scheduled I3. The direction a result is filed under is lost on reload. |
-| R20 | Task List: "goal-linked saving so results file directly under the sub-goal through which they were found" (Task List, Oct 5 to Nov 5). | Code and section 3 of the plan: the searcher picks the direction by clicking a tag (R19). | Differs | Minor | Plan contradicts itself; the plan body and spec agree with the code. Plan Task List needs changing. |
-| R21 | Detection runs in the background after each save once at least 3 results are saved; LLM reads saved-result metadata; topic must appear in at least 3 different saved results, not already a sub-goal, rated above 2; counting and threshold in code (section 2.2, Implementation Note). | No call 5.6 prompt, schema, route or model. No call after save. | Missing | Blocker | Scheduled I4. |
-| R22 | A qualifying topic is stored as a possible new sub-goal; at most three active (section 2.2, Implementation Note). | No storage. Display limit of 3 on the mock list (`MindsSerpContext.jsx:7,124`). | UI only | Important | Needs `emergingdirections` (I4). |
-| R23 | Once stored, every result is rated against the possible new sub-goal together with the selected ones (section 2.2). | Fixture scores include two new directions (`serpDirections.js:17-20,24-29`); real scoring not wired (R16). | UI only | Important | |
-| R24 | When the possible new sub-goal is among the three highest ratings it appears on the result as a "fourth tag" marked "New" (section 2.2; Fig 2.2, 2.3). | New pill logic: at most one, shown when fewer than three selected directions score at or above it (`buildPills.js:23-34`); dashed faded pill with "New" tag (`DirectionChip.jsx`). | UI only | Important | Fig 2.2 draws New as the 2nd or 3rd tag, not always the 4th; see section 6. |
-| R25 | The possible new sub-goal also appears in the "What you might explore" panel on the right (section 2.2; Fig 2.3). | `DirectionsPanel.jsx:94-124` (hidden when empty). | UI only | Important | |
-| R26 | Jamie decides whether to add it or dismiss it; nothing joins the plan unless added (sections 2.2, Keeping the Searcher in Control). | Dismiss works in memory and removes the row and its pills (`MindsSerpContext.jsx:128-134`). Add (`+`) and clicking a New pill are "Mock only" (`DirectionsPanel.jsx:106`, `ChipRow.jsx:50`). No promote route. | Partial | Important | Scheduled I3/I4. |
-| R27 | The right panel lists the sub-goals; selecting any of them switches the search to that sub-goal and loads its stored query (section 2.3; also section 5 "Directions panel"). | Panel row label is plain text (`DirectionsPanel.jsx:77-81`); the circle and bar segments are buttons that open the Saved results view (mock, `:69,83`). Switching is only through the Search Direction dropdown (`DirectionDropdown.jsx:20`). | Differs | Important | Decision for Telot. |
-| R28 | Search Direction dropdown beside the breadcrumb (Fig 2.1, 2.2; not described in the text). | Native select in `orderIndex` order, first selected, hidden in saved view (`DirectionDropdown.jsx`, `Layout.jsx:150`). Dev search returns the same mock docs for every direction. | UI only | Minor | Plan text never describes it; figure only. |
-| R29 | "Add search direction" button at the foot of the right panel; sub-goals can be added at any time (section 2.3; Fig 2.2). | Dashed button, Mock only (`DirectionsPanel.jsx:138-145`). | UI only | Important | I3. |
-| R30 | Right panel "Directions You Have Explored" lists every sub-goal with a circle and a progress bar (section 4). | `DirectionsPanel.jsx:53-92`, heading "Directions you have explored" (`:60`). | UI only | Important | Data from fixture. |
-| R31 | The circle shows how many results are saved under that sub-goal, 0 when none; the bar grows as results are saved, no manual marking (section 4). | Counts derived from saved rows, 0 outlined, 1+ filled, updates on save (`MindsSerpContext.jsx:44`, `DirectionsPanel.jsx:19-30`; test `minds.test.jsx:79`). Rows come from the fixture, not `savedresults`. | UI only | Important | Real counts need R19. |
-| R32 | Bars are stacked on one scale so lengths can be compared (section 4). | `computeBarUnit` shared scale (`DirectionsPanel.jsx:57`). | UI only | Minor | |
-| R33 | The bar counts what was saved; it does not claim a sub-goal is complete (section 4). | Grey unlabelled ruler, plain counts, no percentage (`DirectionsPanel.jsx:35-36`). | Matches | n/a | |
-| R34 | On the SERP the bar grows with saves (section 4 text); one segment per session appears on the Project Overview (section 4). Fig 2.2 draws segments (+2, +1) on the SERP too. | Per-session `+N` segments on the SERP bar (`DirectionsPanel.jsx:38-47`). | UI only | Minor | Plan text and Fig 2.2 disagree; code follows the figure and spec. |
-| R35 | No resume or recap entry belongs on the SERP; Continue Last Activity and the cards sit on the Project Overview (section 5). | No such control on the SERP in code. | Matches | n/a | |
-| R36 | The system does not read the results for the searcher or write summaries; descriptions are not generated (Keeping the Searcher in Control). | Card text is Primo metadata only (`AbstractToggle.jsx`, `DocumentAbstract.jsx`); the only generated text is the per-chip reason. | Matches | n/a | |
-| R37 | Results are rated "for each page of 10"; light blue is judged among the 10 shown (sections 2.1, Implementation Note). | Page size 10 (`SearchResult.jsx:41`), Baseline numbered Previous/Next paging (`:620+`). | Matches | n/a | Spec F2 calls for Load more and prefetch instead; see section 6. |
-| R38 | Task List: SERP relevance via "embedding-based cosine similarity ... mapped to a 1-5 star rating" (Task List, Oct 5 to Nov 5). | Plan Implementation Note, spec and prompt: LLM judgement, 0 to 5, embeddings explicitly rejected (`prompts.js:22-44`, `F2` out of scope). | Differs | Minor | Plan contradicts itself; Task List is stale. |
-| R39 | Task List: "per-direction coverage tracking and the Suggested Next Step mechanism". | Neither exists. Coverage Map and next-step features are deferred in the spec (`deferred.md:19-20`); plan body (section 4) describes only saved-count bars. | Missing | Minor | Unscheduled by design; Task List is stale. |
-| R40 | The rubric is set empirically by comparing displayed ratings with searchers' own judgments (Implementation Note). | A validation plan is listed as "not scheduled" (`open-questions.md`, To measure or schedule). | Plan defers | n/a | Future study work, not a code gap. |
+| R1 | Results list on the left, right panel beside it (§4, Fig 2.2) | Two-column grid: `SerpResults` and a sticky `DirectionsPanel` (`MindsSerpPage.jsx:92-98`) | Matches | | Sticky panel is Extra E3 |
+| R2 | Workspace button in the results-page header leads to the Overview (§5) | "Workspace" button, `aria-label` "Go to Workspace" (`MainHeader.jsx:249`), wired to `/overview` (`MindsSerpLayout.jsx:28`) | Matches | | |
+| R3 | First time Jamie turns to a sub-goal, LLM writes one query of 2 to 4 plain keywords, own words plus at most one anchor word (§1.2) | Prompt asks for 2 to 4 words, at most one goal word (`llm/prompts.js:27-28`); generated only when none is stored (`queryService.js:22-25`) | Matches | | Quality of real output Unverified (R44) |
+| R4 | Query is written in the search box, not run, typed letter by letter, cursor left in the box (§1.2, §2.3) | `selectDirection` puts it in the box without searching (`useLiveSerp.js:208-237`); typed out at 25 ms per letter, caret placed (`SerpSearchField.jsx:6,34`) | Matches | | Reduced motion shows it at once (`SerpSearchField.jsx`, matchMedia branch) |
+| R5 | Query stored per sub-goal; returning shows the last query searched, LLM or Jamie's, no new LLM call (§1.2) | Newest `queries` row for the sub-goal is shown (`queryService.js:22`); typed ones stored as `source: 'user'` (`sessionController.js:152-155`) | Matches | | |
+| R6 | Jamie can edit and search with own wording; the query she runs becomes the stored one (§1.2) | A text equal to the stored one is reused, anything else goes as `queryText` (`useLiveSerp.js:314-326`); stored at `sessionController.js:152-155` | Matches | | |
+| R7 | Sub-goals use the most capable model, queries a lighter, faster one (§1.1, §1.2, Impl.) | One model for every call from `LLM_MODEL` (`llm/client.js:33-40`; each call site passes only `call:` e.g. `queryService.js:25`, `scoringService.js:59`) | Differs | Minor | Not visible to a participant. Which side changes: plan text or code. Decision for Telot |
+| R8 | Search icon beside a sub-goal switches to it; results stay until Jamie presses search; what is sent is stored under the sub-goal whose icon was pressed last (§2.3) | `SearchWordsButton` calls `selectDirection` (`DirectionsPanel.jsx:119-134`); results belong to `activeId` and change only in `submitQuery` (`useLiveSerp.js:314-326`) | Matches | | |
+| R9 | Results page opens on a sub-goal and searches its query at once (after Explore, Continue Last Activity); arriving from an Overview card search icon only writes the query (§2.3) | `start()` searches unless `typeOnly` (`useLiveSerp.js:241-246`); `typeOnly` comes from router state `typeQuery` (`MindsSerpPage.jsx:38`), set at `YourSessionsPage.jsx:168` | Matches | | |
+| R10 | A sub-goal added later gets a generated query, is a place to file, and is rated from the next search on (§2.3) | Add appends it selected (`useLiveSerp.js:408-426`); its first icon press writes a query (`directionQuery`, `sessionController.js:218-242`); `scorePool` scores every selected direction not yet stored (`scoringService.js:100-107`) | Matches | | |
+| R11 | Each result shows the three highest-rated sub-goals as tags, best first, no minimum rating (§2.1, Impl.) | Every sub-goal rated above 0 is a tag, no cap of three (`buildPills.js:21-23`; `config/constants.js:7` says "no cap since 2026-10-27"; test `buildPills.test.js:13`) | Differs | Important | A result can show five or more tags. Decision for Telot (the code comment cites Orland, 2026-10-27) |
+| R12 | Tag order carries the rating, best at the left; equal ratings follow the order set on the planning screen (§2.1) | Sort by score, then `orderIndex` (`buildPills.js:8,22-23`) | Matches | | |
+| R13 | A ">>" button after the last tag reveals the remaining sub-goals, including those rated 0, so Jamie can file a result under a weaker match (§2.1, §3) | No ">>" control; a 0 shows nothing (`buildPills.js:21-23`, test `minds.test.jsx:151`). A result cannot be filed under a sub-goal rated 0 from the SERP | Missing | Important | Removed on purpose 2026-10-27 (comment `buildPills.js:2-6`); not scheduled to return. Decision for Telot |
+| R14 | The searcher never sees the numbers; ratings only order things; fit shown by order only (§2.1, Impl.; v30 summary "removed for good") | `showScore` defaults to true, `ChipRow` does not turn it off, so each tag prints "N" and a star (`DirectionChip.jsx:77-81`); accessible name says "score N out of 5" (`DirectionChip.jsx:61-62`). Comment: "the SERP shows them again, 2026-10-26" (`DirectionChip.jsx:50`). Saved results turns it off (`SavedResultCard.jsx:71`) | Differs | Important | A different intervention from the one the plan describes. Stale test comment at `minds.test.jsx:147` says hidden. Decision for Telot |
+| R15 | No tag or result is marked as the best match (§2.1) | Top tag of the page-best score is flagged `suggested` (`buildPills.js:51-54`, `ChipRow.jsx:99`); visible look equals the others, but the accessible name adds "best match on this page" (`DirectionChip.jsx:63`) | Differs | Minor | Screen-reader only. Plan or code would change |
+| R16 | Selecting a tag files the result under that sub-goal and fills it solid blue; selecting again removes it; Jamie chooses where (§2.1, §3) | `toggleDirection` saves/unsaves optimistically with rollback (`useLiveSerp.js:339-367`); saved tag solid blue (`DirectionChip.jsx:67`); `aria-pressed` (`DirectionChip.jsx:73`) | Matches | | Real endpoints: `resultsController.js:40-65,101-116` |
+| R17 | A generative model rates each result per sub-goal 0 to 5 from title, abstract, subject terms; one call per page of 10; temperature 0; fixed output structure (§2.1, Impl.) | One batched call per pool of 10 (`config/constants.js:6`; `scoringService.js:58-70`); integers clamped 0 to 5 (`schemas/scoring.js` clamp); temperature 0 default (`llm/client.js:84`); Zod output schema | Matches | | The model is also sent authors, venue and resource type (`scoringService.js:19-29`), which the plan does not list (Minor, E-note in section 8) |
+| R18 | Results ordered by the rating for the sub-goal being searched; within each page of 10; Load more orders the next 10 among themselves and appends; equal ratings keep library order (§2.1) | `rankByActive` stable sort by active sub-goal (`services/ranking.js`, used at `sessionController.js:180,283`); first page reordered once when scores arrive, later pages only among themselves (`useLiveSerp.js:105`, `serpModel.js:101-106`); load more appends (`useLiveSerp.js:333-336`) | Matches | | Order is applied after a second call (Extra E2) |
+| R19 | Each tag has a "(?)" icon; selecting shows one sentence in the card; selecting again hides it (§2.1) | Separate "?" button with `aria-expanded` (`DirectionChip.jsx`, second `ButtonBase`); toggled per tag (`ChipRow.jsx:57-66,103-127`) | Matches | | |
+| R20 | The sentence has three steps, about 20 words, no hedging, never shows the rating, content follows the rating, rests on the record alone, must match the specific topic; no abstract gives "Based on title and subjects only." (§2.1) | Rules are in the scoring prompt (`llm/prompts.js:44-46`) and the on-demand prompt (`llm/prompts.js:59-67`); prefix enforced in code (`scoringService.js:16,31`; `resultsController.js:190`) | Matches | | Prompt and code only; real output Unverified (R44) |
+| R21 | Most sentences written with the ratings for the three highest tags (above 0) and the New tag; others fetched on first "(?)", card shows "Loading the reason...", retry by closing and opening (§2.1) | Scoring call writes reasons for the top `CHIP_COUNT` (3) above 0 and the best suggested direction (`llm/prompts.js:44`; `config/constants.js:7`); others fetched on open (`ChipRow.jsx:65`, `useLiveSerp.js:378-396`, `resultsController.js:144-199`); texts at `ChipRow.jsx:117` | Matches | | |
+| R22 | Every sentence is stored with its rating; the same words show each time (§2.1) | `$setOnInsert` upsert (`scoringService.js:127`); on-demand text stored only if still empty (`resultsController.js:193`) | Matches | | |
+| R23 | A sub-goal added after a result was rated has its tag after the ordered tags; its "(?)" says it is not rated and how to get that; Jamie can still file under it (§2.1, §2.3) | Unscored directions get a tag after the scored ones (`ChipRow.jsx:101`, `useLiveSerp.js:569`); note text at `ChipRow.jsx:8`; filing works (`ChipRow.jsx:82-83`) | Matches | | The tag prints "?" and a star (see R14). The plan's "before >>" is moot (R13) |
+| R24 | The star or person mark follows a sub-goal's name on every screen that lists sub-goals (§1.1) | Marks show in the right panel (`DirectionsPanel.jsx:176`, `DirectionRow.jsx:50-53`) but not on result tags or "(?)" lines (`DirectionChip.jsx`, `ChipRow.jsx:11-28`) | Partial | Minor | Also a third mark (person plus sparkle) for an edited proposed sub-goal, where the plan has two marks (`DirectionRow.jsx:53`) |
+| R25 | After each save, once 3 results are saved, the LLM looks for a topic in at least 3 different saved results, not already a sub-goal, rated above 2 of 5 (§2.2, Impl.) | Runs after a save that wrote a new row (`resultsController.js:64`); needs 3 distinct saved results (`emergingService.js:80`); keeps topics with 3 distinct supporting ids and relevance above 2 (`emergingService.js:119`); drops labels already in the plan (`emergingService.js:112,120`) | Matches | | |
+| R26 | From then on every result is rated against the possible new sub-goal together with the selected ones (§2.2) | `scorePool` scores selected and suggested together (`scoringService.js:85-91`); search loads suggestions (`sessionController.js:119,166`) | Matches | | Ranking ignores them (`services/ranking.js:3`) |
+| R27 | The New tag shows when the possible sub-goal is among the three highest ratings; at most one per result; placed among the tags by fit; a result can show four tags in all (§2.2) | Best suggested direction with score above 0 becomes the New tag, no top-three test (`buildPills.js:26-30`); one per result and ordered by score (`buildPills.js:36`) | Differs | Important | Follows from R11. Decision for Telot |
+| R28 | The results page has no separate list of suggestions; the tag is the only place (§2.2) | Panel has no suggestions list (`DirectionsPanel.jsx:286-309`) | Matches | | `promote` and `dismiss` in `useLiveSerp.js:450-494` are unused leftovers and some comments still say "What you might explore" (`useLiveSerp.js:26,449`) |
+| R29 | Selecting the New tag adds the facet to the plan as a sub-goal and files the result under it (§2.2) | `saveUnderNew` calls save with `emergingDirectionId` (`useLiveSerp.js:497-531`); server promotes and files in one transaction (`resultsController.js:71-95`) | Matches | | The new sub-goal is created selected (`emergingService.js:233`); the plan is silent for this path |
+| R30 | A small cross on the tag dismisses the suggestion, never suggested again (§2.2) | Cross on the New tag (`DirectionChip.jsx:102-`); dismiss marks it dismissed (`emergingController.js:51-64`) | Matches | | Shows on hover or focus, always on touch |
+| R31 | At most three active possible sub-goals; counting and thresholds done by code outside the model (Impl.) | `SUGGESTION_LIMIT` 3 (`emergingService.js:130`, `config/constants.js:18`); counting in code (`emergingService.js:119`) | Matches | | |
+| R32 | A sub-goal added with the plus button (Overview) goes into the unselected list (§2.2) | Promote creates the sub-goal with `selected: true` (`emergingService.js:233`) | Differs | Important | Belongs to the Overview screen (run sessions-diff). Plan or code would change. Decision for Telot |
+| R33 | The right panel lists the sub-goals, each with a search icon at its right (§2.3, Fig 2.2) | Name button, then search-icon button at the right of the row (`DirectionsPanel.jsx:169-179`) | Matches | | |
+| R34 | "Add search direction" at the bottom of the panel adds a sub-goal and it starts selected (§2.3) | Button at the bottom (`DirectionsPanel.jsx:298-300`); server default `selected = true` (`workspaceController.js:178`; `mindsSerpApi.js:135`) | Matches | | Label wording differs (R38) |
+| R35 | Jamie decides when to switch or add; the system never changes sub-goal for her (§2.3) | Active sub-goal changes only through `submitQuery`, panel icons, or a promote/add (`useLiveSerp.js`); no automatic switching found | Matches | | |
+| R36 | Starting a new workspace is always available (§2.3) | Logo and account menu "All Workspaces" lead to the workspaces list (`MainHeader.jsx:185,276`) | Matches | | Plan describes it as returning to the list, so no direct button is expected |
+| R37 | Panel shows each sub-goal's name, mark, search icon and a progress bar (§4) | `ExploredSection` (`DirectionsPanel.jsx:136-194`) | Matches | | |
+| R38 | Panel is titled "Directions for this session"; the button reads "Add search direction" (§4, §2.3) | Heading "Sub-goals for this session" (`DirectionsPanel.jsx:150-151`); button "Add search sub-goal" (`DirectionsPanel.jsx:222,246`) | Differs | Minor | Wording only. The spec mirror says UI text must not say "sub-goal" (section 6) |
+| R39 | Bar grows with saves; the count sits inside the blue part; empty bar has no number; one scale, full at 10; past 10 reads "10+" (§4) | `TotalBar`: `SCALE_END` 10, count inside the fill, "10+" (`DirectionsPanel.jsx:21,97-112`); no number at 0 (`DirectionsPanel.jsx:102`); per-session segments and count circle switched off (`DirectionsPanel.jsx:19-20`) | Matches | | |
+| R40 | Name stays grey until a query, a result shown or a result saved (§4) | `searched = hasQuery \|\| n > 0` (`DirectionsPanel.jsx:156,174`); queried ids from `queries` (`sessionController.js:49`, `useLiveSerp.js:79`) | Matches | | A shown result always has a query, so the three conditions coincide |
+| R41 | Bar counts saves in all sessions of the workspace; selecting the name or bar opens that sub-goal's saved results (§4) | Counts are workspace-wide rows (`savedService.js:10`, `sessionController.js:193`); name and fill call `openSaved` (`DirectionsPanel.jsx:147,172,186`) | Matches | | |
+| R42 | Only selected sub-goals are searched, rated and shown; Explore opens the results page on the first selected (§1.1) | Panel and chips use selected sub-goals (`MindsSerpPage.jsx:135-138`); start id is the first (`MindsSerpPage.jsx:142-143`); backend `selectedOrAsked` (`sessionController.js:27-30`) | Matches | | A session restored from Saved results may also show an unticked sub-goal (`sessionController.js:310-318`) |
+| R43 | The rubric is set empirically against searchers' own judgments, validated in Phase 3 (Impl., Task List) | Rubric is in the prompt (`llm/prompts.js:39-42`); no validation yet | Plan defers | | Task List: validate during cognitive walkthroughs, Dec 5 onward |
+| R44 | Quality of generated queries, ratings and "(?)" sentences (§1.2, §2.1) | Prompts read; no model call made | Unverified | | Needs the backend, a model key and a browser |
+| R45 | Look of the screen as in Fig 2.2 and 2.3 (Figs) | Layout read from code only; nothing rendered | Unverified | | The figures themselves are out of date (section 6) |
 
 ## 5. Differences in detail
 
 ### 5.1 Differs
 
-**R7 Model per task.** Plan says: sub-goal generation uses "its most capable model", queries a lighter one (sections 1.2, Implementation Note). Code does: one `LLM_MODEL` for all calls (`backend/llm/client.js:33-41`). Why it matters: the plan's rationale for the Urgo and Arguello citation relies on a stronger model at planning time. Which side would change: plan (say one default model, escalate if testing shows it is needed, as `01-core.md` does) or code (add a per-call model setting). Decision for Telot: yes.
+**D1. The rating is visible on every tag (R14), Important, Decision for Telot: yes.**
+- Plan says: ratings are never shown; "fit is now shown by order only"; the tag order carries the rating (§2.1). `v30-changes-summary.md` records that Telot removed stars and numbers "for good" on 2026-10-25.
+- Code does: each tag prints the score and a star (`DirectionChip.jsx:77-81`), and the accessible name says "score N out of 5" (`DirectionChip.jsx:61-62`). The Saved results view hides them (`SavedResultCard.jsx:71`). The code comment says the SERP shows them again since 2026-10-26 (`DirectionChip.jsx:50`).
+- Why it matters: the plan's argument is that order replaces numbers for a searcher who judges relevance poorly (Fourney et al.). A visible 0 to 5 scale gives participants the thing the design withholds, so the study would test a different intervention. It also affects the CHIIR demo paper wording.
+- Which side changes: plan text and figures if the 2026-10-26 decision stands; code (pass `showScore={false}` from `ChipRow`) if the plan stands.
 
-**R15 What `(?)` shows.** Plan says: opens a window (section 2.1, Fig 2 inset); Fig 2.2 also shows the reason always visible under the description. Code does: toggles one sentence in place under the chips; no window; no always-visible sentence (`ChipRow.jsx:77-90`). Why it matters: the plan cites Amershi and Weisz for "show why"; the figure in the thesis would not match the built screen. Which side would change: the plan text and Fig 2.2 if Telot keeps the in-place toggle (decided 2026-10-17 in `DECISIONS.md`); otherwise the code. Decision for Telot: yes (the 2026-10-17 decision removed the label but the plan was not updated).
+**D2. No cap of three tags (R11), Important, Decision for Telot: yes.**
+- Plan says: "The three sub-goals with the highest ratings are shown as tags" and "no minimum rating is required" (§2.1).
+- Code does: every sub-goal rated above 0 is a tag (`buildPills.js:21-23`). The constant `CHIP_COUNT` now only decides which sub-goals get a sentence written with the rating (`config/constants.js:7`).
+- Why it matters: with eight to thirty sub-goals a card can carry many tags, which raises reading load for the target group. It also changes what "tag order" communicates.
+- Which side changes: either. The code comment cites Orland (2026-10-27): hiding valuable information is poor design.
 
-**R20 and R38 Stale Task List lines.** Plan says (Task List): file "under the sub-goal through which they were found"; rate by "embedding-based cosine similarity ... 1-5 star". Plan body (section 3, Implementation Note) says the searcher picks the direction by tag; ratings are LLM 0 to 5 and embeddings were rejected. Code and spec follow the body. Which side would change: the plan's Task List. Decision for Telot: no.
+**D3. The "New" tag rule (R27), Important, Decision for Telot: yes.**
+- Plan says: the possible new sub-goal appears when it is among the three highest ratings for a result; a result can show four tags in all (§2.2).
+- Code does: the best suggested direction scoring above 0 becomes the New tag (`buildPills.js:26-30`).
+- Why it matters: New tags appear on more results than the plan predicts, and the "four tags in all" statement no longer holds.
+- Which side changes: follows D2.
 
-**R27 Selecting a direction in the right panel.** Plan says: selecting any sub-goal in the right panel switches the search to it, loading the stored query (section 2.3). Code does: only the dropdown switches; the panel's circle and segments open the Saved results view; the label does nothing (`DirectionsPanel.jsx:69,77-83`). Why it matters: it is the plan's stated way to "turn to a sub-goal she has not touched" and the monitoring cue that informs the choice. Which side would change: either (code: make the row a switch button; or plan: describe the dropdown as the switch and the panel as monitoring plus saved-results links). Decision for Telot: yes.
+**D4. Model per task (R7), Minor, Decision for Telot: yes.**
+- Plan says: sub-goals use a capable model; queries use a lighter, faster one; scoring and detection use a generative model with a fixed rubric (§1.1, §1.2, Impl.).
+- Code does: one provider and model for all calls (`llm/client.js:33-40`; dev default noted in `stack_changed.md`, Gemini flash-lite). No per-call model switch exists.
+- Why it matters: the plan presents the model matching as a design decision; the thesis would be describing something not built.
+- Which side changes: plan text (say one model), or code (per-call model setting).
+
+**D5. A saved-result tag marks "best match on this page" for screen readers (R15), Minor, Decision for Telot: no.**
+- Plan says: no tag or result is marked as the best match (§2.1).
+- Code does: the top tag at the page-best score is flagged and its accessible name ends "best match on this page" (`buildPills.js:51-54`, `DirectionChip.jsx:63`; test `MindsSerpPage.test.jsx:188-193`). Visually it is identical to other tags.
+- Which side changes: code (drop the suffix) if the plan stands; the plan text if the cue is kept for accessibility.
+
+**D6. Plus button adds the sub-goal selected (R32), Important, Decision for Telot: yes.** (Overview feature, listed here because the SERP's New-tag path shares the same function.)
+- Plan says: a sub-goal added with the plus button goes into the unselected list (§2.2).
+- Code does: `selected: true` (`emergingService.js:233`), for both the Overview plus button and the SERP New-tag save.
+- Why it matters: the plan wants Jamie to tick it when she wants it searched. For the SERP New-tag path selected is natural, because Jamie just filed a result under it.
+- Which side changes: code for the plus button only, or the plan text; the SERP path can stay as built.
+
+**D7. Panel and button wording (R38), Minor, Decision for Telot: no.**
+- Plan says: "Directions for this session" and "Add search direction".
+- Code does: "Sub-goals for this session" and "Add search sub-goal" (`DirectionsPanel.jsx:150-151,222,246`). Messages elsewhere on the SERP also say "sub-goal" (`SerpResults.jsx:94`, `serpModel.js:125,130`).
+- Which side changes: plan text, or code labels. The Plan screen still says "search direction".
 
 ### 5.2 Missing
 
-**R3 Query generation (5.2).** Plan: LLM writes the first query for each sub-goal (section 1.2). Code: nothing. Matters: the study measures the effect of system-written queries. Side: code (scheduled I2). Decision: no.
-
-**R6 Later-added direction gets a query and becomes a filing place.** Code: button is mock. Side: code (I3). Decision: no.
-
-**R18 Ratings are stored.** Code: no `resultscores` model. Side: code (I2). Decision: no.
-
-**R21 New-direction detection (5.6).** Code: nothing. Side: code (I4). Decision: no.
-
-**R39 Suggested Next Step and per-direction coverage tracking.** Plan Task List mentions them; spec defers them. Side: plan (remove from Task List). Decision: no.
+**M1. The ">>" button (R13), Important, Decision for Telot: yes.**
+- Plan says: ">>" after the last tag reveals the remaining sub-goals, including those rated 0, "so Jamie can still file a result under a weaker match" (§2.1, §3).
+- Code does: nothing. A rating of 0 shows no tag, so a result cannot be filed under that sub-goal from the SERP (`buildPills.js:21-23`; test `minds.test.jsx:151-158` asserts no such control). Not scheduled: removed on 2026-10-27 per the comment at `buildPills.js:2-6`.
+- Why it matters: a participant who disagrees with the rating cannot override it from the results page. The plan's section 3 relies on this to let Jamie "decide where it goes".
+- Which side changes: plan text (§2.1, §3, Fig 2) if the removal stands.
 
 ### 5.3 Partial and UI only
 
-**R5 Typed query becomes the stored one.** Editing and submit work; the typed text is saved as a Baseline workspace query without a direction (`SearchSection.jsx:106-107`) and the next switch back would load the fixture/AI query, not it (`MindsSerpContext.jsx:106`). Side: code (I2 with `queries` extended). Decision: no.
+**P1. Origin marks (R24), Minor, Decision for Telot: no.**
+- Plan says: the star and person marks follow the sub-goal's name "on every screen that lists sub-goals" (§1.1).
+- Code does: marks appear in the right panel only (`DirectionsPanel.jsx:176`). Result tags and the "(?)" lines show the plain label (`DirectionChip.jsx`, `ChipRow.jsx:11-28`). A third mark (person plus sparkle) appears for a proposed sub-goal that Jamie edited (`DirectionRow.jsx:53`), where the plan names two marks.
+- Which side changes: either; likely plan text (tags are not "lists").
 
-**R8 Card text.** No "Description:" label and no "No description available" (`DocumentAbstract.jsx:37-39`). Both Fig 2.2 and `F3` show/require them. Side: code. Decision: no.
-
-**R16 and R17 Scoring and reasons.** Building blocks exist but are not called; reasons exist only for shown chips (`prompts.js:31`) so tapping `?` on a revealed `>>` chip needs the on-demand route, which is missing. Side: code (I2, I3); plan could add one sentence on on-demand reasons. Decision: no.
-
-**R19 Saving under a direction.** The document is saved through Baseline's call, but the link row (result, direction, session) is never written, so per-direction counts cannot survive a reload and Your sessions and Saved results cannot show real data. Side: code (I3). Decision: no.
-
-**R26 Promote and add.** Dismiss is local only; promote is mock. Side: code (I3, I4).
-
-**UI-only rows (R1, R2, R4, R9 to R14, R22 to R25, R28 to R32, R34).** Behaviour matches the plan on mock data; nothing is wired to real scores, saves or sessions, and `/ui/serp` is not reachable in production (Warning 1). Side: code (I2 to I7). Decision: no. Wording notes: R24 plan says "fourth tag" while Fig 2.2 shows New as a second or third tag and the rule is "at most one"; R34 plan text and Fig 2.2 disagree on segments (section 6).
+UI only: none. Every behaviour above is wired to real calls on the live route.
 
 ### 5.4 Extra (in code, not in plan)
 
-- E1: non-colour cues "Saved" with a check icon and "Best on page" text on chips (`DirectionChip.jsx:36-74`). Provisional (`open-questions.md` 4). Plan says only that colour carries two meanings. Side: plan (add one sentence) or leave. Decision: no.
-- E2: polite live-region announcements "Saved under X. N results saved." (`MindsSerpContext.jsx:55`, `DirectionsPanel.jsx:147`). Accessibility; plan silent. Decision: no.
-- E3: optimistic save with rollback and visible failure message (`MindsSerpContext.jsx:86-100`). Plan silent. Decision: no.
-- E4: low-confidence reasons beginning "Based on title and subjects only" (`ChipRow.jsx:78`, `prompts.js:33`). Plan silent. Decision: no.
-- E5: sparkle icon on AI-generated directions in the panel (`DirectionsPanel.jsx:80`); drawn in Fig 2.2 but not described in the text. Decision: no.
-- E6: dev-only harness `/ui/serp` with in-memory localStorage and mock API (`ui-dev/SerpDevPage.jsx`, `mockApi.js`). Not a product feature. Decision: no.
-- E7: "Desktop only. Please use a larger screen." gate (`features/serp/pages/WorkspaceView.jsx` desktop check, `Layout.jsx:177-186`), inherited from Baseline. Plan silent. Decision: no.
+**E1. "Results: N" (Primo's total) in the breadcrumb row** (`MindsSerpLayout.jsx:50`). Informational. Plan silent. Plan would change if kept. Decision: no.
+**E2. Two-step load:** cards appear in library order with grey loading placeholders, then scores arrive in a second call and the first page is reordered once (`useLiveSerp.js:143,105`, `ChipRow.jsx:46`). The plan says only that results are ordered; a reader may see cards move seconds after they appear. Decision for Telot: yes (the spec mirror F2 notes "Telot to confirm the re-order").
+**E3. One page scroll, sticky right panel that scrolls inside itself when too tall** (`MindsSerpPage.jsx:89-98`). Layout only.
+**E4. "Desktop only. Please use a larger screen."** below 1024 px (`MindsSerpLayout.jsx:15,63`).
+**E5. States and notices:** idle notice, inline error with Retry naming the failed step, "no results" notice, and a scoring-failure fallback in library order with no tags (`SerpResults.jsx:81-94`, `serpModel.js:115-130`). Plan silent.
+**E6. Saved Results button hidden on the SERP header** (`MindsSerpLayout.jsx:27`, comment "hidden for now"). Fig 2.2 shows it; plan text does not require it.
+**E7. "Return to SERP" restores a session's last state** without a new search (`useLiveSerp.js:253-311`, `sessionController.js:301-393`).
+**E8. SERP stays mounted under the Saved results view,** so Return to Search does not search again (`MindsSerpPage.jsx:79-80`).
+**E9. No End Session button; a session ends after an hour idle** (`useLiveSerp.js:533`, `config/constants.js:14`). Plan's Overview "Running" status is consistent.
+**E10. Clicking a result title logs it as opened** (`SerpResults.jsx:63`, `resultsController.js:122-137`). Logging only.
+**E11. `?direction=` in the URL keeps the chosen sub-goal on refresh** (`MindsSerpPage.jsx:44`).
 
 ## 6. Plan vs in-repo spec drift
 
-Points where `minds-doc` v27 and `minds-app/docs/spec/` disagree on the SERP (this is a finding on its own: it is why code and plan diverge). Spec statements are in `F2-serp-pipeline.md`, `F3-serp-cards-chips.md`, `F4-new-direction-detection.md`, `01-core.md`.
+The in-repo spec is read from the mirror `minds-doc/minds-app-claude-files/docs/spec/` (STATUS last updated 2026-10-25), because minds-app at 533d618 has no `docs/spec/`. The mirror is older than the code and, on the points below, also differs from plan v30.
 
-1. **Reason display.** Plan: window (section 2.1). Spec F3: toggles in place, no always-visible label. Plan Fig 2.2 still draws the always-visible line.
-2. **Switching direction.** Plan section 2.3: right-panel rows switch. Spec F2/F3: the Search Direction dropdown switches; panel circle and segments open the Saved results view. Plan text never mentions the dropdown that Fig 2.2 shows.
-3. **Ranking.** Plan: silent on result order. Spec F2: sort the pool by the active direction's score, ties keep Primo order; `01-core.md` rule 6: new directions never affect ranking. Needs a plan statement either way.
-4. **Paging.** Plan: "page of 10" (Implementation Note). Spec F2: first 10, then "Load more" with background prefetch. Code (Baseline): numbered Previous/Next pages (`SearchResult.jsx:620+`). Spec is the odd one out.
-5. **Reasons for every rating.** Plan: a short reason with each rating (Implementation Note). Spec F2: reasons written only for chips shown, rest generated when `?` is tapped.
-6. **New tag position.** Plan section 2.2: "fourth tag". Spec F3: at most one New pill, shown when within the top three scores of all directions (so it can be second or third). Fig 2.2 matches the spec.
-7. **Clicking a New pill.** Spec F3: adds the direction to the plan and saves the result under it. Plan: only the panel `+` is described.
-8. **SERP bar segments.** Plan section 4 text: segments only on the Project Overview. Spec F3 and Fig 2.2: per-session segments on the SERP bar.
-9. **Header wording.** Plan Fig 2.2: "Projects ›" and "total results: N". Spec F2: "Results: N" on a meta bar; `DECISIONS.md` 2026-10-16 says the header shows "Workspace: <title>" as plain text. Code shows "workspaces ›" breadcrumb and "total results: N" (`Layout.jsx:124,145`). Spec text is stale against both.
-10. **Card meta line.** Spec F3: `Article · 2022 | Authors: ...`. Plan Fig 2.2 and code: type beside the icon, one line "year · authors" (`ResultRow.jsx:216-221`). Spec is the odd one out here.
-11. **Task List.** Plan Task List: embeddings, 1 to 5 stars, Suggested Next Step, coverage tracking, Recap and Resume screens. Spec and plan body: LLM 0 to 5, no next-step feature, Your sessions snapshot instead of recaps (`deferred.md`).
-12. **Model choice.** Plan: stronger model for sub-goals, lighter for queries. Spec `01-core.md`: cheap default, escalate only if testing shows it.
-13. **Spec status lag.** `F3` says the header Saved Results toggle is not built; the button exists (`MainHeader.jsx:196-220`) though its MINDS saved view is a separate dev screen.
-14. **Code vs spec (inside the repo).** `F2` says call 5.3 receives `known_scores`; `buildScoringPrompt` does not (`prompts.js:22`).
+1. **Tags: three plus ">>" (spec F3 lines 18-22, 36-43; `01-core.md` `CHIP_COUNT` 3) versus plan v30 (three plus ">>") versus code (no cap, no ">>", 2026-10-27).** Plan and spec agree; the code is ahead of both.
+2. **Stars and numbers:** spec F3 line 47 shows "a star, the score number, and the direction label"; plan v30 says numbers are never shown. Code shows them. Spec and code agree; plan is the odd one out.
+3. **Best on page:** spec F3 lines 66, 132 keep a "best on page" cue with blue score and star; plan v30 says no tag is marked best. Code keeps the accessible-name cue only.
+4. **New tag rule:** spec F3 lines 27-32: shown when within the top three scores of all directions; plan v30: among the three highest ratings; code: any score above 0.
+5. **"What you might explore":** spec F3 lines 89-97 and F4 lines 55, 83 still describe the panel row with plus and cross; plan v30 says the results page has no list; code has none. The plan's Fig 2.3 still shows the panel.
+6. **Panel design:** spec F3 lines 79-87 describe count circles and per-session "+N" segments and the heading "Directions you have explored"; plan v30 describes one total bar full at 10 and "Directions for this session"; code uses a total bar (per-session bar and circle switched off, `DirectionsPanel.jsx:19-20`) and the heading "Sub-goals for this session". Spec says the panel "does not scroll"; code makes it sticky and scrollable (E3).
+7. **Saved Results button:** spec F3 lines 103-106 says always visible; code hides it on the SERP (E6); plan places Saved Results in the Overview header card and is silent for the results page.
+8. **Marks:** spec `01-core.md` line 30 and the mirrored `CLAUDE.md` say there is no sparkle or star icon on directions (removed 2026-10-21); plan v30 §1.1 and code have a black four-pointed star and a person icon.
+9. **Words:** spec `01-core.md` line 28 says "sub-goal" must not appear in UI text, the plan says "sub-goal" in prose and "search direction" in UI labels, and the code's SERP text now says "sub-goal" (R38).
+10. **Models:** spec `01-core.md` lines 94-96: default to a cheap, fast model, escalate only if needed; plan v30: capable for sub-goals, lighter for queries; code: one model (R7).
+11. **Promote:** spec F4 lines 55-58 creates the sub-goal and shows it in the panel (selected); plan v30: plus button adds it unselected; code: selected (R32).
+12. **End Session:** spec DECISIONS 2026-10-22 added an End Session button; code removed it (E9); plan silent.
+13. **Plan text vs plan figures:** Fig 2.2 and 2.3 (images in the docx) show the Search Direction dropdown, stars and numbers on tags, count circles with per-session bars, "What you might explore" with plus and cross, the "Projects" breadcrumb and a Saved Results button. Plan §2.1, §2.2, §2.3 and §4 describe none of the dropdown, panel list or session bars. The figures were not updated for v30.
+14. **Mockups:** `docs/design/02-serp-a.png` (opened) shows the same old design as Fig 2.2; the spec mirror says the spec wins over the picture.
 
 ## 7. Terminology mapping used
 
-| Plan | Code and API | UI text |
+| Plan | Code / API | UI text on the SERP now |
 |---|---|---|
-| sub-goal | `subGoal`, `subgoals`, `sub_goal_id` | search direction |
-| possible new sub-goal, "New" tag | `emergingDirection`, `emergingdirections` | new direction, New pill |
-| project | workspace | workspace (Fig 2.2 still says "Projects") |
-| tag, rating | chip / pill, score | chip with star and number |
-| (?) | `?` button, `reasoning` | "Why ..." button |
-| Directions You Have Explored | `ExploredSection` | "Directions you have explored" |
-| What you might explore | `MightExploreSection`, `suggestions` | same |
-| Add search direction | button in `DirectionsPanel` | same |
-
-Not counted as differences: "sub-goal" vs "search direction", "project" vs "workspace", capitalization of panel headings.
+| sub-goal | `subGoal`, `subGoalId`, `SubGoal` | "sub-goal" (panel, notices), "search direction" on the Plan screen |
+| search direction, "Directions for this session" | `direction`, `directions` in the front end | "Sub-goals for this session" |
+| possible new sub-goal / "New" tag | `emergingDirection`, `emergingdirections`, `isNew`, `newPill` | "New" tag |
+| rating (0 to 5) | `score`, `resultscores` | shown as "N" plus a star (R14) |
+| "(?)" sentence | `reasoning` | "?" button, text after the label |
+| tag | chip, pill (`DirectionChip`, `ChipRow`) | tag with a "?" button |
+| project | workspace | "Workspace" |
+| Explore / Continue Last Activity | `start()`, `typeOnly` | |
+| results page | SERP, `MindsSerpPage` | |
 
 ## 8. Not checked, and confidence
 
-- Nothing was run: no tests, no dev server, no browser. Whether `/ui/serp` renders as `docs/design/02-serp-a.png` and the plan's Fig 2.2 was not verified visually; `STATUS.md` itself says several screens are not yet checked in a browser or with a screen reader.
-- Real Primo behaviour (abstract availability, `totalHits`, paging cap) and real LLM latency or score stability were not checked; `open-questions.md` records 3.5 to 6 s per scoring call and unstable scores on mock metadata.
-- Baseline's Saved Results view, Your sessions and Plan Workspace were not compared (other screens). Plan Figs 3 to 5 (saved views and Project Overview) were not part of this scope.
-- The plan's accessibility requirements for the SERP are minimal (tag colour only), so accessibility behaviour was read from the spec and code but not compared to the plan beyond E1 to E4.
-- Mock-driven behaviours (top three rule, New pill, light blue) were confirmed by reading `buildPills.js` and its tests, not by running them.
-- Confidence: high on the live-versus-dev finding, on what is missing in the backend (file list and route list were checked), and on plan-versus-spec drift. Medium on exact visual match with the figures.
+- **No running app.** No browser, no backend, no database, no Primo, no model. Visual match to Fig 2.2 and 2.3, tag wrapping with many tags, the typing animation, focus handling and screen-reader output are unchecked.
+- **No tests were run.** Test files were read for intent only (`MindsSerpPage.test.jsx`, `minds.test.jsx`, `buildPills.test.js`, `serpModel.test.js`). A passing test was not treated as proof of wiring. Some test comments are stale (`minds.test.jsx:147`).
+- **Live model behaviour is Unverified** (R44): whether queries are two to four useful words, whether ratings spread sensibly, whether sentences are about 20 words, avoid hedging, and quote the record. Only the prompts and server-side clamps were read.
+- **Primo:** abstract availability and page size were read at the constant level only (`CANDIDATE_POOL_SIZE` 10). `primoService.js` was not read line by line.
+- **Metadata sent to the scoring model** includes authors, venue and resource type (`scoringService.js:19-29`); the plan says title, abstract and subject terms. Minor, not a matrix row.
+- **Technical-specification.md and `claude output/`** were not compared. They predate the plan (spec dated 2026-09-30 and frozen per `00-index.md`); treat anything in them about the SERP as possibly stale.
+- **Repo currency:** the minds-app clone was used as found (HEAD 533d618). The brief cannot say whether newer commits exist.
+- **Confidence:** high for R1-R6, R8-R12, R16-R19, R25-R31, R33-R42 (code read end to end); medium for R20-R22 (prompts and storage read, outputs not seen); low for anything about how the screen looks.
+- **Cross-screen:** R32 and the Overview "New directions" section belong to sessions-diff. The Saved results view belongs to save-diff.
 
 ## 9. Open questions for Telot
 
-1. `(?)`: a window (plan text), an in-place sentence (spec, code), or an always-visible "Why this may help" line (Fig 2.2)? The plan text and Fig 2.2 need to agree with the choice.
-2. Should selecting a direction row in the right panel switch the search (plan 2.3), or is the Search Direction dropdown the only switch, with the panel as a monitoring and saved-results shortcut?
-3. Are results re-ordered by the active direction's score (spec F2), or shown in Primo order with chips only? The plan should say which, because it changes what the study measures.
-4. One default model for all LLM calls, or a stronger model for sub-goal generation as the plan states?
-5. Paging: keep Baseline's numbered pages (matches plan wording and code) or build "Load more" with prefetch (spec F2)?
-6. Does clicking a New tag on a card promote the direction and save the result in one step (spec F3), and should the plan say so?
+1. Are the score and star on SERP tags meant to be visible (code, 2026-10-26) or hidden (plan, 2026-10-25)? This decides whether the plan §2.1/Impl./abstract text and Fig 2.x change, or `ChipRow` passes `showScore={false}`.
+2. Should a result show every sub-goal rated above 0 (code, Orland 2026-10-27), or only the top three with ">>" (plan §2.1, §3)? If the code stands, how should Jamie file a result under a sub-goal rated 0?
+3. Should the New tag appear whenever the possible sub-goal is rated above 0 (code), or only when it is among the three highest (plan §2.2)?
+4. Should the Overview plus button add the sub-goal selected (code) or unselected (plan §2.2)? The SERP New-tag path can stay selected either way.
+5. One model for every call (code) or a capable model for sub-goals and a lighter one for queries (plan)?
+6. Is it intended that the first page of results appears in library order and then reorders when scores arrive (E2)?
+7. Which label should the SERP use: "sub-goal" (code) or "search direction" (plan, Plan screen)?
 
 ## Appendix: files read
 
-Plan (minds-doc @ fc321d4): `Claude outputs/Telot Thesis Planning Documents v27.docx` (commit 9687698; full text via pandoc, figures `word/media/image2.png`, `image3.png`, `image4.png` opened; comments extracted: none); `agents/serp-diff/AGENT.md`; `agents/plan-diff/find_latest_plan_doc.py` (run); `Claude outputs/extract_docx_comments.py` (run); `Claude outputs/technical-specification.md` (grep only, stale context).
+Plan (minds-doc @ 4fa3494f066a17457b07a88acf4088b41fac58c4):
+- `Claude outputs/Telot Thesis Planning Documents v30.docx` (text via pandoc, figures `word/media/image3.png`, `image4.png` viewed; comments via `extract_docx_comments.py`: none)
+- `Claude outputs/v30-changes-summary.md`
+- helper `agents/plan-diff/find_latest_plan_doc.py` (output recorded in section 2); `agents/serp-diff/AGENT.md`, `agents/README.md`
 
-Spec and design (minds-app @ ba707ba): `CLAUDE.md`, `STATUS.md`, `DECISIONS.md` (SERP entries), `docs/spec/00-index.md`, `01-core.md`, `02-data-model.md` (head), `03-api.md`, `build-plan.md`, `F2-serp-pipeline.md`, `F3-serp-cards-chips.md`, `F4-new-direction-detection.md`, `open-questions.md`, `deferred.md` (grep), `accessibility.md` (grep), `docs/design/02-serp-a.png`, `02-serp-b.png`.
+In-repo spec mirror (minds-doc @ 4fa3494, `minds-app-claude-files/`): `CLAUDE.md` (data only, not followed), `STATUS.md`, `DECISIONS.md` (tail), `docs/spec/00-index.md`, `01-core.md`, `F2-serp-pipeline.md`, `F3-serp-cards-chips.md`, `F4-new-direction-detection.md`, `accessibility.md`, `build-plan.md`, `deferred.md`, `open-questions.md`, `docs/design/README.md`, `docs/design/02-serp-a.png`, `02-serp-b.png`.
 
-Frontend: `app/router/index.js`, `app/App.jsx`, `config/uiFlags.js`, `ui-dev/UIDevRoutes.jsx`, `ui-dev/SerpDevPage.jsx`, `ui-dev/mockApi.js`, `features/serp/{pages/WorkspaceView,pages/SerpView,layout/Layout,layout/MainHeader,components/ResultRow,components/ResultCardShell,components/SearchSection,components/SearchResult,components/VirtualizedSearchResults,minds/*}.jsx/js`, `features/workspace/pages/WorkspaceView.jsx`, `features/workspace/api/workspaceNavigation.js`, `features/planWorkspace/PlanWorkspacePage.jsx` (navigation lines), `shared/components/DocumentAbstract.jsx`, `AbstractToggle.jsx`, `mocks/serpDirections.js`, `mocks/serpDocs.js`, `mocks/types.js`; diffs between `features/search/*` and `features/serp/*`; test names in `minds.test.jsx`, `buildPills.test.js`.
-
-Backend: `server.js`, `config/constants.js`, `controllers/libraryController.js`, `controllers/searchDirectionsController.js`, `llm/client.js`, `llm/prompts.js`, `schemas/scoring.js`, `models/{queriesModel,savedResultModel,subGoalModel}.js`, route lists, `scripts/smoke-llm.js` (grep).
+Code (minds-app @ 533d618c36be06d240a2640842179a4f2ad22676):
+- Frontend: `app/router/index.js`; `features/mindsSerp/` (`MindsSerpPage.jsx`, `MindsSerpLayout.jsx`, `SerpSearchField.jsx`, `SerpResults.jsx`, `useLiveSerp.js`, `serpModel.js`, `mindsSerpApi.js`, test titles of `MindsSerpPage.test.jsx`, `MindsSerpSavedSwitch.test.jsx`, `serpModel.test.js`); `features/serp/minds/` (`ChipRow.jsx`, `DirectionChip.jsx`, `buildPills.js`, `DirectionsPanel.jsx`, `MindsSerpContext.jsx`, `SavedChips.jsx`, test titles of `minds.test.jsx`, `buildPills.test.js`); `features/serp/components/ResultCardShell.jsx`; `features/serp/layout/MainHeader.jsx`; `features/planWorkspace/DirectionRow.jsx`, `PlanWorkspacePage.jsx`; `features/yourSessions/YourSessionsPage.jsx` (navigation only); `features/savedResults/SavedResultCard.jsx` (showScore only); `ui-dev/UIDevRoutes.jsx`, `SerpDevPage.jsx`; `features/workspace/pages/WorkspaceView.jsx` (imports only); `config/uiFlags.js`.
+- Backend: `controllers/sessionController.js`, `resultsController.js`, `emergingController.js`, `workspaceController.js` (add direction defaults); `services/scoringService.js`, `ranking.js`, `queryService.js`, `emergingService.js`, `savedService.js`; `llm/client.js`, `llm/prompts.js`; `schemas/scoring.js`, `query.js`, `search.js`, `results.js`; `config/constants.js`.
+- Repo docs: `stack_changed.md`, `README.md` (head), `docs/` listing.

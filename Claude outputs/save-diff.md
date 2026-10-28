@@ -1,241 +1,210 @@
 # Saved results diff: code vs plan
 
-Generated: 2026-10-20 00:05 (Regina time) by save-diff
-Plan document used: `Claude outputs/Telot Thesis Planning Documents v27.docx` (version v27, internal date "Project Revised: (Oct 15, 2026)", last commit 9687698 2026-10-17 "uploaded v27 doc manually from macbook"; minds-doc HEAD fc321d4 2026-10-19)
-Code checked: Akane-Asahi/minds-app @ ba707ba48c21 (2026-10-19 20:38 -0600), branch main (read-only; nothing fetched or pulled)
+Generated: 2026-10-28 09:20 (Regina time) by save-diff
+Plan document used: `Claude outputs/Telot Thesis Planning Documents v30.docx` (version v30, internal date "Project Revised: (Oct 25, 2026)", last commit 4fa3494 2026-10-26)
+Code checked: Akane-Asahi/minds-app @ 533d618c36be06d240a2640842179a4f2ad22676 (2026-10-27 15:31 -0600), branch main (reused the existing clone; nothing fetched or pulled, as the caller instructed)
 Scope: all Saved results screens (all saved results, one direction, one session, one direction in one session, and the buttons that lead there)
 
 > Warnings:
-> - Run under caller overrides: no clone, pull or fetch, nothing committed or pushed. The clones were used as they were. minds-doc HEAD is fc321d4.
-> - Plan date vs spec date: the in-repo spec `docs/spec/F6-saved-views.md` records layout decisions "by Telot 2026-10-19", four days after the plan's internal date (Oct 15) and two days after its commit (Oct 17). Where the two disagree, that is evidence the plan is stale, not proof (section 6).
-> - The planning document has 0 tracked changes and 0 Word comments, so no unresolved plan comments touch saved results.
-> - Nothing was run in a browser. All "Matches" rows mean the source code does it. STATUS.md says U4 was "not yet checked by keyboard or screen reader" (STATUS.md:29). Test status is quoted from STATUS.md as reported, not re-run.
+> 1. **The plan is older than the code.** v30 was written to match minds-app `2f08f2c` / `209f0cd` (2026-10-25), per `Claude outputs/v30-changes-summary.md`. The code I read is at `533d618` (2026-10-27) and includes changes made after that, with dates in code comments: per-sub-goal colours on Saved results (2026-10-26), "Saved Results for Session N" (2026-10-26), "Continue searching" on a session's saved results, and "Continue Last Activity" removed from the Overview (2026-10-27). Several differences below come from that gap alone. The `change-ledger.md` has no entry after 2026-10-25.
+> 2. **The in-repo spec files are not in the minds-app checkout.** There is no `STATUS.md`, `DECISIONS.md`, `CLAUDE.md`, `docs/spec/` or `docs/design/` in minds-app at this SHA (the repo has only `docs/commands.md`, `docs/font-size-change.md`, `docs/font-weight-change.md`). A copy of them lives in minds-doc under `minds-app-claude-files/` (last commit 4fa3494, 2026-10-26; its `DECISIONS.md` ends at 2026-10-25 and `STATUS.md` says "Last updated: 2026-10-25"). I used that copy for section 6 only. It is older than the code, so it cannot confirm any 2026-10-26/27 decision.
+> 3. **The figures in v30 are known to be out of date.** `v30-changes-summary.md` says so for Figs 3, 4 and 5 ("Only text changed: no figure ... was touched"). Rows for the figures are listed separately so they do not hide the text-versus-code result.
+> 4. Static reading only. Nothing was run in a browser, with a keyboard or with a screen reader, and no tests were re-run.
 
 ## 1. Summary
 
-- The Saved results view is built as UI only. It lives in `frontend/src/features/savedResults/` and renders from mock fixtures at the dev-only route `/ui/saved-results`. It has no production route, no endpoint, and no database reads (R26).
-- Presentation matches the plan's Figs 3 and 4 closely: header with disabled search box and Return to Search, breadcrumb, grouping by session newest first, no groups for a session view, solid-blue saved chips and grey unsaved chips with stars, plain counts.
-- The only saved view a participant can reach in a production build is Baseline's legacy flat list (newest first, bookmark card). The SERP copy's Saved Results toggle opens a different MINDS-flavoured flat list that has no grouping, no counts and no filters (R3, E9).
-- The biggest plan-side problems are three stale Task List claims that contradict the plan's own body: goal-linked saving, "Suggested Next Step" and "Recap and Resume" screens, and embedding-based 1 to 5 star ratings (R27, R28, R29).
-- Smaller differences: the plan's Figs 3 and 4 show two counts and the code shows three; the saved view shows all scored directions with no ">>"; Fig 5 shows Session 2 with 0 saved but the mock data now saves one result there.
-
-Counts: Matches 14 · UI only 7 · Partial 4 · Differs 7 · Missing 1 · Plan defers 0 · Unverified 1 · Extra 9
-(34 plan requirements, R1 to R34, plus 9 extras, E1 to E9.)
-By severity, across the 20 differences (rows that are not Matches): Blocker for the study 0 · Important 7 · Minor 13. The 9 extras are all Minor.
-
-How I used the status words: **Matches** = the code does the same thing for the same rule, and the rule does not depend on the data source. **UI only** = the behaviour exists in code but only on mock fixtures under the dev route, so it needs wiring (build row I6, plus I3, I5, I7).
+- The Saved results view is **live on real data**: one route (`/workspace/:id/saved?direction=&session=`), one real endpoint (`GET /api/workspaces/:id/saved`) reading stored rows only, no Primo call and no model call except the on-demand "?" sentence. The v30 **text** of section 3 and section 5 matches the code on almost every behaviour (scopes, grouping, counts, right panel, undo, "?" sentence, entry points).
+- **Most important difference (Important, Decision for Telot):** a session's saved results opened from the Overview show a button "Continue searching" that jumps to the results page restoring that session's last state. The plan says the one button is "Return to Workspace" and goes back to the Overview (R15).
+- **Second:** the tag and panel colours. The plan says saved tags and selected panel names are solid blue. The code gives every sub-goal its own pastel colour with dark text (Telot, 2026-10-26, per code comment), and the "grey" unsaved tag is white with a grey outline (R23, R25, R30). All Minor.
+- **Third:** Figs 3, 4 and 5 still show the 2026-10-20 design (rating stars on tags, two counts, no right panel, no title card, "Projects" breadcrumb). The v30 text says the opposite on each of these points (R36 to R38).
+- No requirement is Missing. Open risk needing a browser: whether "Return to Workspace" survives after the participant uses the right panel (R16).
+Counts: Matches 26 · UI only 0 · Partial 1 · Differs 8 · Missing 0 · Plan defers 0 · Unverified 3 · Extra 12
 
 ## 2. Which plan document was used
 
-Chosen by `agents/plan-diff/find_latest_plan_doc.py` ("highest version number v27"). It printed no warnings and no ties.
+Helper: `agents/plan-diff/find_latest_plan_doc.py` on `Claude outputs/`. Reason printed: "highest version number v30". No warnings, no tie.
 
-| Candidate | Version | Trailing | Used? |
-|---|---|---|---|
-| Telot Thesis Planning Documents v27.docx | 27 | 0 | **yes** |
-| Telot Thesis Planning Documents v7 - SRL Stripped-3.docx | 7 | 3 | no (older) |
-| Telot Thesis Planning Documents v7 - SRL Stripped-2.docx | 7 | 2 | no |
-| Telot Thesis Planning Documents v7 - SRL Stripped-1.docx | 7 | 1 | no |
-| Telot Thesis Planning Documents v7 - Restructured.docx | 7 | 0 | no |
-| Telot Thesis Planning Documents v7 - SRL Stripped.docx | 7 | 0 | no |
+| Candidate | Version | Used? |
+|---|---|---|
+| Telot Thesis Planning Documents v30.docx | 30 | **yes** |
+| Telot Thesis Planning Documents v29.docx | 29 | no |
+| Telot Thesis Planning Documents v27.docx | 27 | no |
+| Telot Thesis Planning Documents v7 - SRL Stripped-3 / -2 / -1 / Restructured / SRL Stripped (five files) | 7 | no |
 
-v27 discusses saved results (Prototype Design Overview sections 3 and 5, Figs 3 and 4, Fig 5). No older candidate has a newer internal date. Ignored as non-plan files: two user persona docx files, `technical-specification.md`, `plan-diff.md`, `sessions-diff.md`, change summaries, `citation-verification.md`, one Word lock file.
-
-Figure mapping is by order, as printed by the extract step: image1 = Fig 1, image2 = Fig 2.1, image3 = Fig 2.2, image4 = Fig 2.3, image5 = Fig 3, image6 = Fig 4, image7 = Fig 5. I opened image3, image5, image6 and image7. I did not open image1, image2 or image4 (not saved-results screens). Fig 2.3's description comes from the picture of image3 only; Fig 2.3 itself was not opened.
-
-What the opened figures show:
-- **Fig 3** (Screen 3, saved results for one sub-goal, "Physical health benefits"): logo; disabled-looking search box with "urban green space mental health benefits policy"; account icon; Return to Search button. Breadcrumb "Projects > How green spaces affect wellbeing > Physical health benefits". Two counts: folder icon 3, three-arrows icon 1. Group headings "SESSION 3 · SEP 23" and "SESSION 1 · SEP 18" with a rule. Three cards (1 in Session 3, 2 in Session 1). Each card has a type icon and label (Journal article, Report), title, "year · authors", "Description:" text with "Read more", then chips: a solid-blue saved chip with "4★ Physical health benefits (?)" and up to one grey chip such as "2★ Mental health benefits (?)". List fills the left ~70%; right side empty.
-- **Fig 4** (Screen 4, one session, "Session 3"): same header. Breadcrumb ends "Session 3". Counts folder 6, arrows 3. Six cards, no group heading. Chips as in Fig 3.
-- **Fig 5** (Screen 5, Project Overview): header with a "Saved Results" button and no search box; Continue Last Activity; three cards; Sessions panel (Session 3: Mental health +4, Physical health +1, Indigenous placemaking +1, "6 saved"; Session 2: Community access +0, "0 saved"; Session 1: Physical health +2, "2 saved"); Directions panel with circles 4, 3, 1, 0, and a dashed "–" for the New direction.
-- **Fig 2.2** (image3): SERP header with a "Saved Results" button next to the account icon.
+Checks made on v30: it discusses saved results (section 3 "Organization: Saving into Sub-Goals", sections 4 and 5, Figs 3 to 5, Task List, Fall 2026 Goals). Internal date "Oct 25, 2026" is the newest; no older-numbered candidate has a newer internal date. The extract step reports 0 insertions, 0 deletions and 0 comments, so there are no Word review comments to list ("plan comment, not yet reflected": none). Figure-to-caption mapping is by order (the extract script's rule): image5 = Fig 3, image6 = Fig 4, image7 = Fig 5; I opened all three and the images match their captions. `technical-specification.md` and the lowercase `claude output/` folder say nothing about saved results, so there is no stale context from them.
 
 ## 3. Which code is the live Saved results view
 
-Four separate pieces of saved-view code exist. Only the legacy one is reachable in a production build.
-
-| Piece | Files | State |
+| Piece | State | Evidence |
 |---|---|---|
-| **MINDS Saved results view (F6, U4)** | `frontend/src/features/savedResults/SavedResultsScreen.jsx`, `SavedResultCard.jsx`, `savedModel.js` (+ 2 test files) | **Dev-only, mock fixtures.** Mounted only by `frontend/src/ui-dev/UIDevRoutes.jsx:8,118-148` at `/ui/saved-results?direction=&session=`. `/ui` is lazy-loaded only when `NODE_ENV === "development"` (`frontend/src/app/router/index.js:24-27,70-79`). This is the view that implements F6 (grouping, counts, filters). |
-| SERP copy's saved list | `frontend/src/features/serp/pages/WorkspaceView.jsx:84-86,157-159`, `serp/components/SavedSearchResults.jsx:11-27`, `serp/components/SavedDocumentCard.jsx:100`, `serp/minds/SavedChips.jsx` | **Dev-only** (the SERP copy is only mounted by `ui-dev/SerpDevPage.jsx:4`). A flat list, newest first, one solid chip per saved direction, unsaving the last chip removes the card (`SavedChips.jsx:8-12`, `SavedDocumentCard.jsx:44-60`). No grouping, no counts, no filters, no breadcrumb. This is what the SERP's Saved Results toggle opens (`serp/layout/Layout.jsx:65-68`). |
-| **Baseline legacy saved view** | `frontend/src/features/search/pages/SavedSearchResultsView.jsx`, `search/components/SavedSearchResults.jsx`, `shared/components/SavedDocumentCard.jsx` (bookmark button), data from `features/workspace/api/savedDocsQueryService.js:10` (`POST /api/saveddocs/querylist`) | **The only live, production-routed saved view.** Reached through `/workspace` -> `features/workspace/pages/WorkspaceView.jsx:5,155` (`router/index.js:19,91-94`). Real data via `/api/saveddocs`. It is the control condition's code. |
-| Duplicate | `features/search/components/SavedSearchResults.jsx` vs `features/serp/components/SavedSearchResults.jsx` | Same file apart from the card import path (diff showed only the import line). |
+| `frontend/src/features/savedResults/SavedResultsPage.jsx` + `SavedResultsScreen.jsx` + `SavedResultCard.jsx` + `savedModel.js` + `savedApi.js` | **Live MINDS view**, real data | route `app/router/index.js:102` (`/workspace/:workspaceId/:view` -> `MindsSerpPage`); `MindsSerpPage.jsx:79` renders `SavedResultsPage` when `view === "saved"`; data from `savedApi.js:9-14` |
+| `frontend/src/features/mindsSerp/MindsSerpPage.jsx` | Hosts the view. `serp` and `saved` are one route, so the SERP stays mounted (hidden) under the saved view and Return does not search again | `MindsSerpPage.jsx:30-34, 79-80, 114, 120` |
+| `backend/controllers/savedViewController.js` (`getSaved`), route `backend/routes/workspaceRoutes.js:72` | Live data path: stored rows only (`savedresults`, `resultscache`, `resultscores`, sessions, sub-goals) | `savedViewController.js:15-17, 36-40, 62-69`; test `backend/__tests__/savedView.test.js:134` ("makes no Primo call and no LLM call") |
+| `backend/controllers/resultsController.js` (`saveResult`, `unsaveResult`, `getReasoning`) | Live: chip save, removal, and the on-demand "?" sentence | `resultsController.js:36-65, 144-172` |
+| `frontend/src/ui-dev/UIDevRoutes.jsx` route `/ui/saved-results` | **Dev only**, mock fixtures (`frontend/src/mocks/sessionsFixtures.js`); not in a production build | `router/index.js:26-29, 72-81` (route only when `NODE_ENV === "development"`); `UIDevRoutes.jsx:15, 118-145` |
+| `features/search/pages/SavedSearchResultsView.jsx` (+ `features/search/components/SavedSearchResults.jsx`, `shared/components/SavedDocumentCard.jsx`, `workspace/context/SavedBookmarksContext.jsx`) | **Baseline legacy**, still routed at `/workspace` as the control condition; not the MINDS view | `router/index.js:19, 40, 93-97`; `features/workspace/pages/WorkspaceView.jsx:4-5` |
+| `features/serp/pages/SavedSearchResultsView.jsx`, `features/serp/components/SavedSearchResults.jsx`, `features/serp/components/SavedDocumentCard.jsx`, `features/serp/minds/SavedChips.jsx` | **Duplicate / dev only**: reached only from `ui-dev/SerpDevPage.jsx` (imports `serp/pages/WorkspaceView`); not routed in the app | `grep` of imports: only `ui-dev/SerpDevPage.jsx:4` imports `serp/pages/WorkspaceView` |
+| `backend/routes/saveddocsRoutes.js`, `controllers/saveddocsController.js`, `models/savedDocModel.js` | Baseline saved-documents API; MINDS chips write `savedresults` only | `backend/services/savedService.js:1-5` |
 
-Entry points into the MINDS view:
-- Your sessions header button, count circles, bar segments and session tiles all call `onNavigate({ to: "saved-results", ... })` (`yourSessions/YourSessionsScreen.jsx:97`, `DirectionCard.jsx:23,65`, `SessionTile.jsx:64`). The dev route turns that into a `/ui/saved-results` URL (`UIDevRoutes.jsx:52-70`). Your sessions itself has no production route.
-- SERP right panel: circles and bar segments only show a mock message (`serp/minds/DirectionsPanel.jsx:69,83`); they do not open any view.
-- SERP header toggle: `MainHeader.jsx:196-220` calls `onTabChange`; on the SERP copy that sets the hash to `#all` and opens the SERP copy's flat list, not the F6 view.
+Entry points and how they reach the view (all real navigation, no mock):
+- **Overview header "Saved Results" button** -> `YourSessionsScreen.jsx:240` -> `YourSessionsPage.jsx:162-167` -> `/workspace/:id/saved` with router state `{ from: "overview" }`.
+- **Overview sub-goal name or bar** -> `DirectionCard.jsx:92, 129-132, 146` (`?direction=`).
+- **Overview session tile** -> `SessionTile.jsx:68-76` (`?session=`).
+- **Results-page right panel, sub-goal name or bar** -> `DirectionsPanel.jsx:147, 162-172, 186` (`?direction=`).
+- **Results-page header "Saved Results" button**: built but hidden (`MindsSerpLayout.jsx:27`, `hideSavedButton`).
+- **Count circle and per-session bar segments** (Overview and results page): built but switched off (`DirectionsPanel.jsx:19-20`, `DirectionCard.jsx:18, 145`); the total bar replaces them.
+- Route order: `/workspace/:id/overview` is a static segment, so it wins over `/:view` (`router/index.js:102-104`; React Router v6 ranking, not run).
 
-Data: the MINDS view reads fixtures from `getSessionsFixture` (`mocks/sessionsFixtures.js`), with no `fetch`, axios or React Query in the `savedResults` folder (grep). The "?" reason falls back to the text "Mock only: the reason would be fetched here." (`SavedResultCard.jsx:8,52`). Backend: the `SavedResult` model exists (`backend/models/savedResultModel.js:11-26`) but no route or controller uses it (grep of `backend/` finds it only in `models/`, `__tests__/models.test.js` and `subGoalModel.js`). `backend/routes/saveddocsRoutes.js:17-24` has only add, remove, byExternalId, saveQueryOnSearch, querylist, countsByWorkspace. The spec's `GET /api/workspaces/:id/saved` (`docs/spec/03-api.md:25`) does not exist. Build row I6 "F6 wiring" is not started (`docs/spec/build-plan.md:47`, `STATUS.md:46-51`).
+Mock versus real: everything the participant reaches in the app runs on real data. Only `/ui/saved-results` runs on fixtures.
 
 ## 4. Requirement matrix
 
-Plan citations: "§3" = Prototype Design Overview "3 Organization: Saving into Sub-Goals"; "§4" = "4 Monitoring"; "§5" = "5 Cross-Session Support: Resuming a Project"; "Control" = "Keeping the Searcher in Control"; "Impl" = "Implementation Note"; "TL" = Task List. File paths are under `/home/claude/akane-asahi/minds-app/frontend/src/` unless marked `backend/` or `docs/`.
+Plan citations are to v30 section names: "§2.1" = Evaluation: Relevance and Usefulness of Results; "§3" = Organization: Saving into Sub-Goals; "§4" = Monitoring; "§5" = Cross-Session Support; "KSC" = Keeping the Searcher in Control; "TL" = Task List; "FG" = Fall 2026 Goals.
 
 | ID | Plan says (section/fig) | Code does (path:line) | Status | Severity | Notes |
 |---|---|---|---|---|---|
-| R1 | Saved views are "Screen 3" (one sub-goal) and "Screen 4" (one session); Project Overview is "Screen 5" (Fig 3, 4, 5 captions) | No screen numbers in the UI. Spec says to use names; "numbers differed across old documents" (`docs/spec/01-core.md:36-38`). Spec calls Your sessions "Screen 3" in places | Differs | Minor | Naming only. The plan has no figure or number for the whole-project view |
-| R2 | Project Overview has a Saved Results button that opens the saved results of the whole project (Fig 5; §5) | `features/yourSessions/YourSessionsScreen.jsx:97` (header button calls `onNavigate({to:"saved-results"})`); dev route turns it into `/ui/saved-results` (`ui-dev/UIDevRoutes.jsx:59-60`) | UI only | Minor | Your sessions has no production route. Navigation is wired only in `/ui` (DECISIONS.md 2026-10-19 "Dev navigation is wired ... a Phase 1 exception") |
-| R3 | SERP header has a Saved Results button that opens the saved results (Fig 2.2/2.3; §5) | Button exists: `features/serp/layout/MainHeader.jsx:196-220`. On the SERP copy it sets hash `#all` (`serp/layout/Layout.jsx:65-68`) and shows the flat SERP-copy list (`serp/pages/WorkspaceView.jsx:84-86,157-159`), not the F6 view | Partial | Important | The button is there; what it opens is not the view in Figs 3 and 4. F5/F3 want it to open F6 with no filter (`docs/spec/F3-serp-cards-chips.md:103-106`); scheduled I7 |
-| R4 | Saved Results opens saved results of "the whole project" (§5) | No-filter variant: `features/savedResults/savedModel.js:29-31` (no filters = all rows), crumb "All Saved Results" (`:71`), h1 "All saved results" (`:73`). Test: `savedModel.test.js:7` | UI only | Minor | Works on fixtures only. Plan gives no layout for this variant (see E1) |
-| R5 | View for a sub-goal shows everything saved under it across the project (§3; Fig 3) | `savedModel.js:30` filters `r.subGoalId === directionId`; test `savedModel.test.js:35` and `:56` (equals the Your sessions circle) | UI only | Minor | Mock fixtures; I6 wires it |
-| R6 | The sub-goal view groups its results by session, with a heading per session "SESSION 3 · SEP 23" and a rule (§5; Fig 3) | `savedModel.js:53-56` builds groups and headings `Session ${n} · ${day}`; `SavedResultsScreen.jsx:85-92` renders an h2 in small uppercase letter-spaced text with a rule | Matches | n/a | Only sessions with saves get a group (`savedModel.js:33-39`). Heading text is made uppercase by CSS |
-| R7 | Sessions are listed newest first (Fig 3: Session 3 above Session 1) | `savedModel.js:55` sorts by `b.session.number - a.session.number` | Matches | n/a | |
-| R8 | The session view shows everything saved in that session across sub-goals, as one list (§5; Fig 4 has no group headings) | `savedModel.js:30` (session filter), `:56` (heading null when `sessionId` set); `SavedResultsScreen.jsx:85` (no heading rendered) | Matches | n/a | |
-| R9 | The sub-goal view "can be limited to one session" (§3) | `savedModel.js:30` supports both filters; reached from a Your sessions bar segment (`yourSessions/DirectionCard.jsx:65`); test `savedModel.test.js:50` | UI only | Minor | Dev route only |
-| R10 | Order of cards inside a session group (plan text silent; Figs 3 and 4 imply earliest save first) | `savedModel.js:31` sorts by `savedAt` ascending. Card order matches Fig 4 and Fig 3 | Matches | n/a | Plan text never states the order; only the figures do |
-| R11 | Header: logo, search box showing the last query (disabled look), account icon, Return to Search button (Figs 3, 4; text is silent) | `SavedResultsScreen.jsx:43` (`MainHeader ... savedMode showSearch searchPreview={lastQuery}`); disabled `TextField` `MainHeader.jsx:34-45,164-165`; label "Return to Search" `MainHeader.jsx:219`. Test `SavedResultsScreen.test.jsx:24-28` | Matches | n/a | The last-query text in the figures differs between Figs 3/4 ("...mental health benefits policy") and Fig 5 ("...mental health policy"); see P10 |
-| R12 | Breadcrumb "Projects > {project name} > {sub-goal \| Session n}" (Figs 3, 4) | `SavedResultsScreen.jsx:49-59`; last segment `savedModel.js:71` ("Physical health benefits", "Session 3", "All Saved Results", "{direction} · Session n") | Matches | n/a | "Projects" is "Workspaces" in the app (terminology). Segments are links except the last (`aria-current="page"`) |
-| R13 | Header counts: two plain counts, a folder icon with the number of results and a three-arrows icon with the number of directions: 3 and 1 (Fig 3), 6 and 3 (Fig 4) | Three counts: results (document icon), directions (three arrows), sessions (history icon) (`SavedResultsScreen.jsx:69-73`; `savedModel.js:58-63`). The two shared counts give 3/1 and 6/3 for the fixtures (`docs/spec/F6-saved-views.md:36-42`) | Differs | Minor | The code adds a sessions count and uses a document icon; Figs 3 and 4 have neither. Decision for Telot: yes. F6 says Telot decided on three counts, 2026-10-19 |
-| R14 | Counts are plain counts, never percentages; the progress cues use little text (§4; Abstract) | `SavedResultsScreen.jsx:17-25,69-73` (icon + number, screen-reader label); `savedModel.js:59-63` counts only | Matches | n/a | |
-| R15 | List fills the left part of the page, nothing on the right (Figs 3, 4) | `SavedResultsScreen.jsx:67` (`maxWidth: lg: 72%`) | Matches | n/a | |
-| R16 | Card: type icon and label, title, "year · authors", "Description:" text with "Read more" (Figs 3, 4) | Shared card shell: `SavedResultCard.jsx:19-20,59` (icon via `toDoc`, title, `year · authors`), abstract with "Read more" toggle via `shared/components/AbstractToggle.jsx:5,99` | Partial | Minor | The word "Description:" in the figures is not in the code (grep for "Description" in `frontend/src` finds only icon names). I did not check whether the type label reads "Journal article" or "Article" (`shared/iconMapper.js:33-35` uses "Article") |
-| R17 | Each tag shows a rating from 0 to 5 as a number and a star, then the sub-goal name, e.g. "4★ Physical health benefits" (§2.1; Fig 3) | `serp/minds/DirectionChip.jsx:60-64` (`{score}★` then label) | Matches | n/a | |
-| R18 | A solid blue tag means saved; unsaved tags are lighter (§2.1; Figs 3, 4 show grey for unsaved) | Saved = solid blue (`DirectionChip.jsx:49`), unsaved on the saved view = white with grey border (`:46`, `SavedResultCard.jsx:37` passes `variant="neutral"`) | Matches | n/a | Light blue ("strongest on page") is a SERP-only rule and is not used here |
-| R19 | Saved views carry "the same star-and-tag cues as the results page" (§3, §5); the results page shows the 3 highest-rated tags, ties in planning order, and ">>" reveals the rest (§2.1) | Saved chips first (by `orderIndex`), then every other scored direction highest first, with no cap and no ">>" (`savedModel.js:45-49`; `SavedResultCard.jsx:31-44`). Ties are not broken by planning order | Differs | Minor | Figs 3 and 4 show at most 2 chips per card. F6 says the same as the code (`docs/spec/F6-saved-views.md:47-50`). Decision for Telot: yes |
-| R20 | Each result "still shows which sub-goals it matched when Jamie saved it" (§5) | Chips read stored scores for the result (`savedModel.js:43-44`, fixtures in `mocks/sessionsFixtures.js`) | UI only | Minor | Mock scores. STATUS.md:27 says scores are stored and never re-requested, so the real behaviour should match once I6 reads `resultscores` |
-| R21 | Each tag has a "(?)" that opens an explanation of why the result may help (§2.1; Control); saved views carry the same tags | `SavedResultCard.jsx:21-26,46-55` opens the reason in place; null reason shows the placeholder (`:8,:52`). No reasoning route in `backend/routes/` (grep) | UI only | Minor | Scheduled I3 (`docs/spec/build-plan.md:44`) |
-| R22 | Selecting a tag files the result under that sub-goal; selecting it again removes it (§3) | On the saved view, clicking a saved chip flips a local override (`SavedResultsScreen.jsx:34,39`; `SavedResultCard.jsx:41`); nothing is sent or stored. Test `SavedResultsScreen.test.jsx:51-60` | UI only | Minor | The plan describes this for the results page; the saved-view behaviour is in F6 (see E2, E3) |
-| R23 | The system does not read the results for Jamie and does not write summaries (Control) | The card shows the Primo abstract only (`SavedResultCard.jsx:11-12`); no network or LLM call exists anywhere in `features/savedResults/` (grep) | Matches | n/a | |
-| R24 | Plan's AI components are sub-goal generation, query generation, result scoring, new-direction detection (Impl); none runs on the saved view | The saved view makes no Primo or LLM call (grep, as R23) | Matches | n/a | F6 allows one on-demand reasoning call on a null reason (`docs/spec/F6-saved-views.md:14-17`); the plan's Impl Note does not list that call (section 6) |
-| R25 | Purpose: saved results "can be viewed by sub-goal and by session" so a returning searcher can recover what was saved and why (Abstract; §3; §5; Jamie's Wednesday scenario) | All four scopes exist on mock data only (see R2, R4, R5, R9). A participant in a production build gets Baseline's flat list instead (section 3) | Partial | Important | Depends on R26 |
-| R26 | A working Saved results view in the MVP: real data and navigation (TL "Build the MVP" Oct 5 to Nov 5; Fall goal 2) | No production route (`app/router/index.js:83-97`; the spec's `/workspace/:id/saved` is absent); no `GET /api/workspaces/:id/saved`; no controller reads or writes `savedresults` (`backend/models/savedResultModel.js:11-26`; `backend/routes/saveddocsRoutes.js:17-24`) | Missing | Important | Scheduled: I6 (`docs/spec/build-plan.md:47`), needing I2, I3, I5, I7. Not "Blocker" only because those rows are still ahead (see section 9, question 5) |
-| R27 | TL: "Implement goal-linked saving so results file directly under the sub-goal through which they were found" and Fall goal 2 "goal-linked saving" | §3 says the searcher picks the sub-goal by selecting a tag, and "Jamie decides both whether to save a result and where it goes". Code: chips choose the direction (`DirectionChip.jsx:53-57`; `SavedResultCard.jsx:41`) | Differs | Important | Plan contradicts itself; the code matches §3. The plan's Task List needs to change |
-| R28 | TL: "the Suggested Next Step mechanism" and "the Recap and Resume screens" (Phase 1; Fall goal 2) | §Control says the system "does not choose the next step" and writes no summaries. Code has no recap or next-step feature; both are listed as deferred (`docs/spec/deferred.md:8-10,20-25`). The Project Overview (Fig 5) replaces them | Differs | Important | Touches the saved view only indirectly (the Resume path). The plan's Task List needs to change |
-| R29 | TL: "embedding-based cosine similarity ... mapped to a 1-5 star relevance rating"; Phase 3 "Validate the similarity thresholds for the star ratings (1 ★ to 5 ★)" | §2.1 and Impl say ratings are whole numbers 0 to 5 from a generative model with a rubric, and explain why embeddings were not used. Code and spec use 0 to 5 integers (`docs/spec/01-core.md:68`; `DirectionChip.jsx:60`) | Differs | Important | The stars on saved cards come from this. The plan's Task List needs to change |
-| R30 | Fig 5: Session 2 saved nothing ("Community access +0", "0 saved"); Sessions panel totals 6 + 0 + 2 | Mock data now saves one result in Session 2 (`mocks/sessionsFixtures.js:128-129,155-160`), so totals are 9 results, 4 directions, 3 sessions (`SavedResultsScreen.test.jsx:32`; DECISIONS.md 2026-10-19 U4) | Differs | Minor | Decision for Telot: yes. The change was made so the all-sessions view has three groups |
-| R31 | Fig 3 content: 3 results (Session 3: Walkability 4★ Physical + grey 2★ Mental; Session 1: Physical Activity Outcomes 4★ + grey 2★ Community access; Green Space Proximity 5★) | Fixture: Session 1 has the two Physical results, Session 3 has Walkability (`mocks/sessionsFixtures.js:134-148,186-190`); the code's own mockup `docs/design/05-saved-single-direction.png` is the same picture | Matches | n/a | Compared with the code's mockup and fixture text; the scores of the two Session 1 items were cut off in my read of the fixture lines, so those two chip scores are taken from the mockup, not from code |
-| R32 | Fig 4 content: Session 3 has 6 cards in this order: Neighbourhood Parks 5★, Urban Green Space Exposure 4★, Mindfulness 4★, Access to Nature 3★, Walkability (4★ + grey 2★), Indigenous-Led Placemaking 3★ | Fixture session s3 produces exactly these six in this order (`mocks/sessionsFixtures.js:163-195`); same as `docs/design/06-saved-single-session.png` | Matches | n/a | |
-| R33 | Accessibility on this screen: plan has no rule for it; Abstract says progress cues use little text | Spec rules exist (`docs/spec/accessibility.md:65-70`); code has a hidden h1, a polite status region, screen-reader count labels and native `aria-pressed` buttons (`SavedResultsScreen.jsx:20-22,46-47`; `DirectionChip.jsx:54-56`) | Unverified | Minor | STATUS.md:29 says not yet checked by keyboard or screen reader; I did not check either |
-| R34 | Fall goal 2: by November 5 "MVP complete: planning, ... goal-linked saving, ... integrated and confirmed through informal use" | Done: U0 to U4 UI and I0, I1 (`STATUS.md:11-42`). Not done: U2 (restarted), I2 to I8 (`STATUS.md:46-51`) | Partial | Important | Plan says Nov 5; today is 2026-10-20. See section 9, question 5 |
-| E1 | (plan silent) | The whole-project view's layout: h1 and breadcrumb "All saved results / All Saved Results", grouped by session, and heading text for the four scopes (`savedModel.js:71-73`) | Extra | Minor | |
-| E2 | (plan silent) | Unsaving on this view keeps the card with its chip grey until the participant leaves (`savedModel.js:69-76` via overrides; `SavedResultsScreen.jsx:34-39`; test `:51`) | Extra | Minor | F6 decision; the Baseline-style legacy and SERP-copy lists remove the card instead (E9) |
-| E3 | (plan silent) | Clicking a grey chip saves the result under that direction from the saved view (`SavedResultCard.jsx:41`) | Extra | Minor | |
-| E4 | (plan silent) | The three counts update live when a chip is toggled (`SavedResultsScreen.jsx:35`; `savedModel.js:58-63`) | Extra | Minor | |
-| E5 | (plan silent on what is clickable) | Circles, bar segments and session tiles on Your sessions open the saved view with `direction`, `direction`+`session`, `session` (`DirectionCard.jsx:23,65`; `SessionTile.jsx:64`). The SERP panel's circles and segments show a mock message only (`serp/minds/DirectionsPanel.jsx:69,83`) | Extra | Minor | The plan describes the circle, the segments and the Sessions panel but never says they open Screens 3 and 4 |
-| E6 | (plan silent) | Empty state "Nothing saved here now"; loading skeletons with `aria-busy`; error with Retry (`SavedResultsScreen.jsx:61-65,76,78-80`) | Extra | Minor | |
-| E7 | (plan figures show a plain solid chip) | Saved chip also shows a check icon and the text "Saved" (`DirectionChip.jsx:66-71`) | Extra | Minor | `docs/spec/F3-serp-cards-chips.md:52` and `open-questions.md` item 4 mark this provisional |
-| E8 | (plan silent) | Screen-reader support: hidden h1 per scope, polite status text, labelled counts, native buttons (`SavedResultsScreen.jsx:20-22,46-47`) | Extra | Minor | See R33 |
-| E9 | (plan silent) | Two other saved lists exist in code: the SERP copy's flat list with solid chips only (`serp/components/SavedSearchResults.jsx:11-27`, `serp/minds/SavedChips.jsx:13-60`) and Baseline's bookmark list (`search/components/SavedSearchResults.jsx`; `shared/components/SavedDocumentCard.jsx:8,62`) | Extra | Minor | Baseline's list is the control and must stay; the SERP copy's list is a candidate to replace at I6/I7 |
+| R1 | Saved results is one view with two filters (a sub-goal and a session); Figs 3 and 4 show two of its states (§3) | One component, two optional filters: `SavedResultsPage.jsx:26-28`, `savedModel.js:31-33` | Matches | Minor | Whole-workspace state has no figure. "Screen 3 / Screen 4" numbering exists only in the figure captions; code has no screen numbers. |
+| R2 | The Saved Results button in the Overview header card opens the saved results of the whole workspace (§5) | `YourSessionsScreen.jsx:240`; `YourSessionsPage.jsx:162-167`; `router/index.js:102` | Matches | | |
+| R3 | The name of a sub-goal, or its bar, opens the saved results for that sub-goal (Overview) (§4, §5) | `DirectionCard.jsx:92, 129-132, 146` | Matches | | |
+| R4 | On the results page, selecting the name or the bar opens the results saved under that sub-goal (§4) | `DirectionsPanel.jsx:147, 162-172, 186` | Matches | | |
+| R5 | A session tile on the Overview opens that session's results (§5) | `SessionTile.jsx:68-76` | Matches | | |
+| R6 | Whole-workspace view is grouped by session, newest session first (§5) | `savedModel.js:35-41, 51-54` (sorted by session number descending, line 53) | Matches | | |
+| R7 | The view for one sub-goal groups its results by session (§5, Fig 3) | `savedModel.js:31-33, 51-54` (heading present unless a session is set) | Matches | | |
+| R8 | The view for one session shows everything saved in that session across sub-goals (§5, Fig 4) | `savedModel.js:31-33, 54` (`heading: null` with a session filter) | Matches | | |
+| R9 | The same view can be limited to one session on top of a sub-goal (§3, "two filters") | `savedModel.js:31-33`; reachable via the right panel inside a session view (`SavedResultsPage.jsx:95`) | Matches | | The per-segment entry point is switched off (E2). |
+| R10 | Group heading per session, e.g. "SESSION 3 · SEP 23" (Figs 3, 4) | `savedModel.js:54`; `SavedResultsScreen.jsx:190-194` | Matches | | Plan text does not describe headings; figure does. |
+| R11 | Each saved card shows a tag for each sub-goal the result is saved under, in the order set in planning, not in order of fit (§3) | `savedModel.js:43-49` (sorted by `orderIndex`, line 47); `SavedResultCard.jsx:63-77` | Matches | Minor | Chips are limited to saves made in that same session (`savedViewController.js:47-49`, `savedModel.js:44`), so a result saved under A in Session 1 and under B in Session 3 appears as two cards, one tag each. `orderIndex` can also change when the sub-goals are re-ordered on the Overview, so "order set in planning" is not strictly true (v30-changes-summary.md notes this). |
+| R12 | Title card like the Workspace Overview, with the path Workspaces > workspace name > Saved Results (§3) | `SavedResultsScreen.jsx:145-157`; `WorkspaceTitleCard.jsx:21-35` | Matches | | |
+| R13 | Last path segment is "Saved Results" (§3) | `savedModel.js:70, 72`: for a session scope it is "Saved Results for Session N" (breadcrumb and h1) | Differs | Minor | Code comment cites Telot 2026-10-26. Fig 4 shows "Session 3". Plan side would change. |
+| R14 | One button: "Return to Workspace" when opened from the Overview, "Return to Search" otherwise (§3) | `SavedResultsPage.jsx:24, 88`; `WorkspaceTitleCard.jsx:71` | Matches | | For views with no session filter. See R15 for the session view. |
+| R15 | Return takes Jamie back to where the view was opened from: the Overview when opened from there; the results page otherwise (§3) | With a session filter the button is "Continue searching" (`SavedResultsScreen.jsx:147`) and, from the Overview, goes to the results page with `?restore=<session>` (`SavedResultsPage.jsx:79`), not to the Overview. Other cases follow the plan (`SavedResultsPage.jsx:80-81`) | Differs | Important | Session tile -> session's saved results -> button: plan says back to the Overview with no search box; code opens the SERP restored to that session's last state. Test `SavedResultsPage.test.jsx:220-225` protects the code behaviour. Decision for Telot. |
+| R16 | Same "Return to Workspace" behaviour holds while Jamie uses the saved view (§3, "Return takes Jamie back to where the view was opened from") | Choosing a name in the right panel calls `setSearchParams(..., { replace: true })` with no `state` (`SavedResultsPage.jsx:95`), while the all-saved path passes `state: location.state` explicitly (`SavedResultsPage.jsx:73`). Router state `from: "overview"` is read at `SavedResultsPage.jsx:24` | Unverified | Important if confirmed | Probably the state is dropped after the first panel click, so the search box returns and the button reads "Return to Search". Not run; no test covers it (`SavedResultsPage.test.jsx:176-199` clicks the panel but never checks the button). `v30-changes-summary.md:74, 110` suspects the same thing. Needs a browser click-through. |
+| R17 | No search box when opened from the Overview; from the results page the header keeps a (disabled) search box with the last query (§3; Figs 3, 4) | `SavedResultsPage.jsx:88-92` (`showSearch={!cameFromOverview}`, `lastQuery`); `MainHeader.jsx:38-45`; `SavedResultsScreen.jsx:140` | Matches | | |
+| R18 | A row of three counts at the top: saved results, sub-goals and sessions in the view (§3) | `SavedResultsScreen.jsx:168-172` | Matches | | |
+| R19 | Counts are plain counts, never percentages (§4) | `savedModel.js:56-61` counts distinct results, sub-goals, sessions | Matches | | |
+| R20 | The counts are of what is "in the view" (§3) | `savedModel.js:56-61` counts every saved chip on the shown cards, including other sub-goals saved on the same card (`savedViewController.js:47-49` sends them) | Partial | Minor | With a direction filter the sub-goals count can be above 1 when a card is also saved under another sub-goal. Fig 3 shows "1". Plan wording is ambiguous. The unit tests use fixtures where each card has one saved chip (`savedModel.test.js:34-39`). Decision for Telot. |
+| R21 | A card shows title, year and authors, description and tags (Figs 3, 4; §3) | `SavedResultCard.jsx:25-28, 92`; card chrome `features/serp/components/ResultCardShell.jsx` (type icon and label at 30-54, 76; abstract at 267-272) | Matches | | Fig label differences are in R36 and R37. |
+| R22 | The searcher never sees the 0 to 5 ratings; they only order things (§2.1) | `SavedResultCard.jsx:71` (`showScore={false}`); `DirectionChip.jsx:77` | Matches | | Text matches code; Figs 3 and 4 still show "4★" (R36, R37). |
+| R23 | A solid blue tag means saved; "fills the tag solid blue" (§2.1, §3) | Saved chip is filled with the sub-goal's own pastel colour and dark text (`DirectionChip.jsx:67`; palette `theme/directionColors.js:9-19`; passed in at `SavedResultCard.jsx:73`) | Differs | Minor | Code comment: "One colour per search direction on Saved results (Telot, 2026-10-26)". On the results page saved chips are still blue. Plan side would change. |
+| R24 | Selecting a saved tag removes the result from that sub-goal, but the card stays with a grey tag until Jamie leaves the view; selecting the grey tag again undoes it (§3) | `SavedResultsScreen.jsx:123-136` (overrides keep the card and flip the chip); `SavedResultsPage.jsx:41-50`; `savedModel.js:43-49`; test `SavedResultsScreen.test.jsx:51-60`, `SavedResultsPage.test.jsx:120-133` | Matches | | The removal is saved at once on the server, and undo saves back into the original session (`resultsController.js:52-61`). |
+| R25 | The removed tag looks grey (§3, Fig 3) | Unsaved chip is white with a grey outline (`DirectionChip.jsx:12-13, 65`) | Differs | Minor | |
+| R26 | Jamie decides where a result goes; selecting a tag files or removes it (§3) | `SavedResultsPage.jsx:41-43` -> `saveResult` / `unsaveResult` (`mindsSerpApi.js:68-77`) -> `resultsController.js:36-65` | Matches | | Edge cases in E9. |
+| R27 | "?" on a saved tag shows the stored sentence and writes it on first selection if none is stored; selecting again hides it (§3, §2.1) | `SavedResultCard.jsx:30-58` (`loadReason`, `toggleReason`, `reasonText`); `SavedResultsPage.jsx:51`; `resultsController.js:144-172` (returns stored reasoning first) | Matches | | Error text: "The reason is not available right now. Tap ? to try again." (`SavedResultCard.jsx:10`). |
+| R28 | Right panel "Directions with saved results" lists each sub-goal that has saved results, with its mark and the number saved (§3) | `SavedResultsScreen.jsx:62-90, 104-116` (mark via `LabelWithMark`, line 40) | Matches | Minor | Panel title in code is "Sub-goals with saved results" (line 70); see section 7. |
+| R29 | Selecting a name shows only that sub-goal's results, without a new search; several names can be chosen; selecting again, or Reset, shows everything (§3) | `SavedResultsScreen.jsx:62-79`; `SavedResultsPage.jsx:29-37, 95`; test `SavedResultsPage.test.jsx:176-199` ("no new request") | Matches | | |
+| R30 | Selected names in the panel are solid blue (§3) | Panel buttons are filled with the sub-goal's colour; a selected one gets a dark inset ring (`SavedResultsScreen.jsx:38`) | Differs | Minor | Same decision as R23. |
+| R31 | No Primo call; the only model call is the sentence written on first "?" (§3, KSC) | `savedViewController.js:15-17`; test `savedView.test.js:134-139`; `SavedResultsPage.jsx:14-16` | Matches | | Re-saving from the view can start new-direction detection (E10). |
+| R32 | The system does not read results for Jamie, write summaries or choose the next step (KSC) | No such code in `features/savedResults/` or `savedViewController.js` | Matches | | |
+| R33 | Saved results screens built and integrated, viewable by sub-goal and by session (TL "Implement goal-linked saving ... viewed by sub-goal and by session"; FG 2; abstract) | Live route, real endpoint (section 3) | Matches | | |
+| R34 | MVP "confirmed through informal use" by Nov 5 (TL, FG 2) | Not visible in code. The mirrored `STATUS.md` says "not yet checked in a browser, by keyboard or with a screen reader" (as of 2026-10-25) | Unverified | Minor | Reported, not re-run. |
+| R35 | Progress cues "use little text" (abstract) and the interface is meant to be usable with low working memory (abstract, Related Work) | Plain counts, one-line reasons, aria roles and a live region exist (`SavedResultsScreen.jsx:143, 168-172`; `DirectionChip.jsx:58-63, 71-74`); no keyboard or screen-reader check possible here | Unverified | Minor | The plan has no accessibility rule specific to this screen. |
+| R36 | Fig 3 (single sub-goal) | Figure shows: breadcrumb "Projects > How green spaces affect wellbeing > Physical health benefits", two counts only, "4★"/"2★" scores on tags, "Description:" and "Journal article" labels, empty right side, no title card, "Return to Search" in the header. Code: "Workspaces" breadcrumb ending in "Saved Results", three counts, no scores, no "Description:" prefix (none in `frontend/src`), right panel, title card (`SavedResultsScreen.jsx:145-157, 165-208`) | Differs | Minor | Figure is out of date; v30 text is right on each point. Plan figure would change. |
+| R37 | Fig 4 (single session) | Same as R36, plus breadcrumb "Session 3" and a different "Return to Search" place; code ends the path in "Saved Results for Session 3" and uses "Continue searching" | Differs | Minor | Figure is out of date. |
+| R38 | Fig 5 (Overview) as the entry point: "Saved Results" in the top bar, title "Project Overview", "Continue Last Activity", session pills with "S1" badges, count circles and segments | Header card titled "Workspace" holding the Saved Results button (`YourSessionsScreen.jsx:235-241`); no Continue Last Activity; total bars, no circles or segments (`DirectionCard.jsx:145-146`) | Differs | Minor | Only the saved-results entry points matter here; the rest is for sessions-diff. |
 
 ## 5. Differences in detail
 
 ### 5.1 Differs
 
-**R1 Screen names and numbers**
-- Plan says: Screen 3 and Screen 4 are the saved views; Fig 5 is Screen 5 (captions).
-- Code does: names screens, not numbers, and says numbers differed across documents (`docs/spec/01-core.md:36-38`).
-- Why it matters: a reader of the plan and the spec can mean different screens by "Screen 3" (the spec's feature file for Your sessions uses "Screen 3").
-- Which side would change: either; no behaviour is affected. Decision for Telot: no.
+**R15 Return button on a session's saved results (Important, Decision for Telot: yes)**
+- Plan says: one button, "Return to Workspace" when opened from the Overview, and Return goes to the Overview with no search box (§3).
+- Code does: for any session-filtered view the button reads "Continue searching" (`SavedResultsScreen.jsx:147`); from the Overview it opens the results page with `?restore=<sessionId>`, which loads that session's last direction, query and results from stored rows (`SavedResultsPage.jsx:79`; `useLiveSerp.js:248-285`). Test `SavedResultsPage.test.jsx:220-225`.
+- Why it matters: a participant who taps a session tile to remind themselves what was saved is sent into a search instead of back to the Overview. That is arguably a different cross-session path than the plan describes ("Jamie chooses where to resume", §5). It does not stop the study, but the plan and the interface describe two different flows.
+- Which side would change: plan (if the new flow is wanted) or code (if "Return to Workspace" is wanted).
 
-**R13 Counts row**
-- Plan says: two counts, a folder icon (results) and a three-arrows icon (directions) (Figs 3 and 4).
-- Code does: three counts, a document icon (results), three arrows (directions) and a history icon (sessions) (`SavedResultsScreen.jsx:69-73`).
-- Why it matters: the figures in the thesis would not match the screens participants see.
-- Which side would change: the plan's figures, if Telot's 2026-10-19 decision stands (`docs/spec/F6-saved-views.md:36-42`); otherwise the code. Decision for Telot: yes (confirm).
+**R13 Last path segment for a session (Minor, Decision: no)**
+- Plan says "Saved Results" (§3). Code: "Saved Results for Session N" (`savedModel.js:70, 72`), a dated Telot decision in a code comment. Plan side would change (one phrase).
 
-**R19 Which chips a saved card shows**
-- Plan says: saved views carry "the same star-and-tag cues as the results page" (§3, §5); the results page shows the three highest-rated tags, ties in planning order, with ">>" for the rest (§2.1).
-- Code does: saved chips first, then every other scored direction highest first, with no cap and no ">>"; ties are not resolved by planning order (`savedModel.js:45-49`; `SavedResultCard.jsx:31-44`).
-- Why it matters: with up to 8 directions a card can grow many chips; the plan's "same cues" is ambiguous about this.
-- Which side would change: the plan (say saved cards show all scored directions) or the code (cap at 3 and add ">>"). Decision for Telot: yes.
+**R23, R25, R30 Colours (Minor, Decision: yes)**
+- Plan says saved tags and selected panel names are solid blue, the unsaved tag is grey, and "solid blue means saved" (§2.1, §3).
+- Code does: per-sub-goal pastel fills for saved tags and panel buttons (`directionColors.js:9-19`), white-with-grey-outline for an unsaved tag (`DirectionChip.jsx:12-13, 65`). Colour is never the only cue (names are written out; `aria-pressed` is set).
+- Why it matters: §2.1 uses "solid blue" as a rule ("Every other tag is plain"). On the results page that rule still holds; on Saved results it does not. A participant sees two colour systems for "saved".
+- Which side would change: plan text (and the figures), since the code comment records a Telot decision dated after the v30 baseline. Telot should confirm that the results page is meant to stay blue.
 
-**R27 Task List: goal-linked saving**
-- Plan says: Task List "Implement goal-linked saving so results file directly under the sub-goal through which they were found"; Fall goal 2 repeats "goal-linked saving".
-- Code does: the searcher chooses the direction by clicking a tag (`DirectionChip.jsx:53-57`). The plan body (§3) says the same.
-- Why it matters: the Task List describes an automatic filing mechanism that the design no longer has.
-- Which side would change: the plan's Task List. Decision for Telot: no.
-
-**R28 Task List: Suggested Next Step, Recap and Resume**
-- Plan says: Task List "Suggested Next Step mechanism" and "Recap and Resume screens" (Phase 1 and Fall goal 2).
-- Code does: neither exists; both are deferred (`docs/spec/deferred.md:8-10,20-25`), and the plan body (§Control) says the system does not choose the next step or write summaries. The Project Overview with Continue Last Activity takes their place.
-- Why it matters: the Task List contradicts the plan's central claim about leaving the searcher in control.
-- Which side would change: the plan's Task List. Decision for Telot: no.
-
-**R29 Task List: embedding similarity and 1 to 5 stars**
-- Plan says: Task List "embedding-based cosine similarity ... 1-5 star"; Phase 3 "Validate the similarity thresholds".
-- Code does: whole-number 0 to 5 ratings from a generative model (`docs/spec/01-core.md:68`); the plan's §2.1 and Impl say the same and give reasons against embeddings.
-- Why it matters: the stars on saved cards come from this.
-- Which side would change: the plan's Task List. Decision for Telot: no.
-
-**R30 Fig 5 Session 2**
-- Plan says: Fig 5 shows Session 2 with "Community access +0" and "0 saved".
-- Code does: mock Session 2 saves one result under Community access, so the all-sessions view has 3 groups and 9 results (`mocks/sessionsFixtures.js:128-129,155-160`).
-- Why it matters: the plan's figures and the fixture no longer describe the same scenario.
-- Which side would change: the fixture or the plan's Fig 5 (and the text "Session 3 ... Session 1" around it). Decision for Telot: yes.
+**R36, R37, R38 Figures (Minor, Decision: no)**
+- Plan figures 3, 4 and 5 predate the v30 text. Differences are listed in the matrix rows. `v30-changes-summary.md:85-92, 119` already lists them as needing new screenshots. The plan side would change (new screenshots).
 
 ### 5.2 Missing
-
-**R26 No wiring**
-- Plan says: a working MVP by Nov 5 with the saved views (TL; Fall goal 2).
-- Code does: no production route, no saved endpoint, no code that reads or writes `savedresults` (section 3).
-- Why it matters: until wired, participants only get Baseline's list.
-- Which side would change: the code (build I6, after I2, I3, I5, I7); or the plan's date. Decision for Telot: no for the code; the date is question 5.
+None. Every behaviour the v30 text describes for Saved results has a trace in code.
 
 ### 5.3 Partial and UI only
 
-- **R3** (Partial): the SERP's Saved Results button opens the SERP-copy flat list, not the F6 view. Code would change (I7).
-- **R16** (Partial): the "Description:" label in Figs 3 and 4 is not in the code. Code would change if Telot wants the label; or the figures. Decision for Telot: yes (minor).
-- **R25** (Partial) and **R34** (Partial): depend on R26.
-- **R2, R4, R5, R9, R20, R21, R22** (UI only): all run on fixtures under `/ui`. Code would change at I3 (save, `?` reason endpoint), I5 (sessions), I6 (data), I7 (navigation). No plan change is needed.
+**R20 "Sub-goals" count with a direction filter (Partial, Minor, Decision: yes)**
+- Plan says the row of counts gives the number of saved results, sub-goals and sessions "in the view" (§3); Fig 3 shows "1" sub-goal for a one-sub-goal view.
+- Code does: counts the saved chips on the shown cards, and a card carries all the sub-goals saved on that result in that session (`savedViewController.js:47-49`; `savedModel.js:43-49, 56-61`). A result saved under both A and B, viewed with the filter on A, counts two sub-goals.
+- Why it matters: the number can disagree with the one sub-goal the participant chose. Real data with two-sub-goal saves is common; the unit tests do not cover it.
+- Which side would change: either (plan clarified to "sub-goals shown on the cards", or code counts only the filtered sub-goal).
+
+**UI only:** none. The dev route `/ui/saved-results` is a mock-data copy of the same components, not a separate requirement.
 
 ### 5.4 Extra (in code, not in plan)
 
-E1 to E9 are listed in the matrix. For each: the plan is silent; the code follows F6 or a decision in DECISIONS.md. The plan side would change only if Telot wants these behaviours in the thesis text. The ones most worth a plan sentence are E5 (what opens Screens 3 and 4) and E2 and E3 (what a card does after an unsave and what a grey chip does). Decision for Telot: yes for E2 and E3, no for the rest.
+Each item: Plan says nothing / Code does / Why it matters / which side / Decision.
+
+- **E1 Header "Saved Results" button on the results page.** Built and hidden (`MindsSerpLayout.jsx:27`; `MainHeader.jsx:235-245`). The plan names only the Overview button. The mirrored `F6-saved-views.md:21` still lists the SERP toggle as an entry point. Either remove the dead code or restore it. Decision: yes.
+- **E2 Count circle and per-session bar segments** are switched off (`DirectionsPanel.jsx:19-20`; `DirectionCard.jsx:18, 145`). The plan already says there is no circle or segment. The "one direction in one session" scope (a bar segment) is only reachable through a session tile plus the panel. Decision: no.
+- **E3 Panel lists the session's other sub-goals greyed with a 0** when a session is open (`SavedResultsScreen.jsx:50-60, 113-115`; test `SavedResultsPage.test.jsx:203-211`). Plan says the panel lists sub-goals "that has saved results". Plan side would change. Decision: no.
+- **E4 Empty, loading, error and not-found states**: "Nothing saved here now" (`SavedResultsScreen.jsx:183-185`), skeleton cards (181), "Saved results could not be loaded." with Retry (159-163), "Saved results not found" page for an unknown sub-goal, session or workspace (`SavedResultsPage.jsx:59-68`). The plan does not describe them. Decision: no.
+- **E5 A failed save or removal** puts the chip back and shows a visible message (`SavedResultsScreen.jsx:130-135, 175-179`). Not in plan. Decision: no.
+- **E6 The results page stays mounted under the view**, so returning does not search again, and a change made in the view updates the results page (`MindsSerpPage.jsx:30-34, 79`). Not in plan. Decision: no.
+- **E7 Workspace-name link in the path goes to the Overview** (`SavedResultsScreen.jsx:154`); on the Overview the plan says the name links to the plan (§4). Plan silent for this screen. Decision: yes (consistency).
+- **E8 Saved results cannot be opened when the workspace has no selected sub-goals.** `MindsSerpPage.jsx:139-141` shows "No search sub-goals yet" before the saved view is rendered, and the Overview lets a participant untick sub-goals. §5 says the button opens the saved results with no condition. Edge case. Which side: code. Decision: yes.
+- **E9 Undo for a sub-goal that was unticked afterwards is refused.** `ownedDirection` accepts only selected sub-goals (`resultsController.js:27`), so clicking the grey tag shows the failure message and the tag stays grey (`SavedResultsScreen.jsx:130-135`). Edge case, also noted in the mirrored `F6-saved-views.md:96`. Decision: yes.
+- **E10 Re-saving from the view starts new-direction detection** in the background (`resultsController.js:64`). §2.2 says detection follows a save, so this is consistent, but the view's "no model call" statement (R31) is true only for the view's own data request. Decision: no.
+- **E11 Baseline's saved view is still routed at `/workspace`** (control condition) and several duplicate files exist (section 3). Not in plan. Decision: no.
+- **E12 Dev-only `/ui/saved-results`** on mock fixtures (`UIDevRoutes.jsx:15, 118-145`). Not in plan. Decision: no.
 
 ## 6. Plan vs in-repo spec drift
 
-| Point | Plan (v27) | Spec / code (minds-app) |
-|---|---|---|
-| Counts row | Two counts (Figs 3, 4) | Three counts incl. sessions (`F6-saved-views.md:36-42`) |
-| Header and breadcrumb wording | "Projects", "sub-goal" in figures | "Workspaces", "search direction" (`F6-saved-views.md:31-33`) |
-| Chips on saved cards | "same cues as the results page" | all scored directions, no `>>`, text "Saved" on saved chips (`F6-saved-views.md:47-50`) |
-| Reason ("?") | The model returns a rating and a short reason in the same scoring call (Impl) | Reason may be null and fetched on demand by a separate endpoint; this is the one LLM call the saved view may make (`F6-saved-views.md:14-17`; `03-api.md:18`) |
-| Session 2 saves | 0 (Fig 5) | 1 (fixture) |
-| Unsave on saved view | Silent | Card stays, chip goes grey (`F6-saved-views.md:59-61`) |
-| Entry points | Only the Saved Results button is said to open the view | circle, bar segment, session tile, button (`F6-saved-views.md:19-24`) |
-| Mockup counts | Figs 3, 4: 3/1 and 6/3 | `docs/design/04` shows 8 and 3; F6 says those were wrong (`F6-saved-views.md:39-40`) |
-| Spec says plan is "currently v27" | n/a | `docs/spec/00-index.md:57`; consistent with the file chosen |
+Source: `minds-doc/minds-app-claude-files/docs/spec/F6-saved-views.md` and `DECISIONS.md` (copy, not the minds-app checkout; see warning 2). It describes the state of 2026-10-22 to 2026-10-25.
 
-Other documents: `Claude outputs/technical-specification.md` describes the older "Session History" and task-based design and says nothing about saved-results screens, so it is stale for this topic. The lowercase `claude output/` folder has no saved-results text. Neither was compared.
+| Topic | In-repo spec copy (F6) | Plan v30 | Code at 533d618 |
+|---|---|---|---|
+| SERP header Saved Results toggle as an entry point | Yes (`F6:21, 92`) | Not mentioned | Built, hidden (E1) |
+| Count circle and bar segment entry points | Yes (`F6:22-23, 92`) | Name or bar only (§4, §5) | Switched off (E2) |
+| Right panel | "All directions" row first (`F6:43-47`) | No "All directions" row; Reset; several names (§3) | Reset, several names; matches plan |
+| Saved chip | Solid blue, score and a check icon (`F6:56-57`) | Solid blue, no check mark, no score (§2.1) | Pastel per sub-goal, no score, no check icon (R22, R23) |
+| Breadcrumb last segment | "All Saved Results", direction label, "Session {n}" (`F6:31-33`) | "Saved Results" | "Saved Results" or "Saved Results for Session N" |
+| h1 | Visually hidden (`F6:34-35`) | Not described | Visible title in the title card (`SavedResultsScreen.jsx:145-157`) |
+| Title card, Return button | Header button "Return to Search"; no title card (`F6:28-30`) | Title card with one button, Return to Workspace / Search (§3) | Title card; "Continue searching" for a session (R15) |
+| Return from the Overview | `DECISIONS.md:482` (2026-10-23): "Return to Search" goes back to the Overview, search box hidden | Return to Workspace | Matches the plan except the session case |
+| Counts | Three counts (`F6:36-42`) | Three counts | Three counts; Figs 3, 4 show two |
+
+The plan v30 is closer to the code than the spec copy is. The spec copy is stale on the 2026-10-25 and later changes. In both, the spec says a card shows only directions saved in that session (`F6:57`), which matches the code. Technical-specification.md and the lowercase `claude output/` folder have nothing on saved results.
 
 ## 7. Terminology mapping used
 
-| Plan | Code and spec |
-|---|---|
-| project, Project Overview | workspace, Your sessions ("Workspace Overview" title) |
-| sub-goal | search direction (UI), `subGoal` (code, API) |
-| Screen 3, Screen 4 | Saved results view (one view, two optional filters) |
-| Screen 5, Project Overview | Your sessions |
-| tag, rating, star | chip, score |
-| possible new sub-goal ("New") | new direction, `emergingDirection` |
-| Saved Results button | header toggle "Saved Results" / "Return to Search" |
+- Plan "sub-goal" = code `subGoal` / API `subGoalId` = UI "sub-goal" or "search sub-goal" (the UI now uses "sub-goal" on these screens, for example "Sub-goals with saved results", "Sub-goals for this session", "Last Sub-goal"). Plan v30 headings still say "Directions" in places ("Directions with saved results", "Directions for this session", "Selected Directions", "Directions you have explored" in Fig 5). Wording only; not counted as differences.
+- Plan "workspace" = code "workspace"; Figs 3, 4, 5 still say "Projects" / "Project Overview".
+- Plan "saved results" / "Saved Results" = route `/saved`; "New direction" = `emergingDirection`.
+- "Return to Workspace" in plan = button reading `Return to ${returnTo}` with `returnTo = "Workspace"` (`SavedResultsPage.jsx:88`; `WorkspaceTitleCard.jsx:71`).
 
 ## 8. Not checked, and confidence
 
-- Nothing was run: no browser, no tests, no dev server, no backend. Test names were read; STATUS.md says U4 model and render tests pass ("reported, not re-run").
-- Rendering: I read the JSX, not the screen. Visual points (spacing, "Journal article" vs "Article" label, grey chip tone) are taken from source and from the code's own mockups, not from a rendered page.
-- Keyboard and screen-reader behaviour of the saved view was not checked (R33).
-- I did not open Figs 1, 2.1, 2.3 or the SERP copy's rendering; Fig 2.3's "Saved Results" button is described from Fig 2.2 (image3).
-- R31: two of the Session 1 chip scores were cut off when I printed the fixture lines, so I took them from `docs/design/05-saved-single-direction.png`.
-- Confidence: high for sections 3 and R26 (route and endpoint lists read directly); medium for visual matches (R6 to R18); low for accessibility.
-- Not read in full: `F2`, `F4`, `F5`, `F7` feature files, `SerpDevPage.jsx` beyond its header, `mockApi.js`, backend controllers other than by grep.
+- Not run in a browser, with a keyboard or with a screen reader: whether the router state survives the right-panel click (R16), real contrast of the pastel colours (a unit test exists, `directionColors.test.js`, not run), focus order, and whether the "Description:" prefix or any type label differ visually in a real card (I only confirmed there is no "Description:" string in `frontend/src` and that the card shows a type icon and label from `ResultCardShell.jsx:30-54`).
+- Real backend and database not exercised. The backend test `savedView.test.js` mocks the models; I read the test names only and quote nothing about pass or fail ("reported, not re-run").
+- React Router ranking of `/overview` over `/:view` is from my knowledge of v6 (package.json pins `^6.3.0`; installed version not checked).
+- The git history is shallow (one commit), so I could not see what changed between `2f08f2c` (the v30 baseline) and `533d618`. Differences caused only by the later commits are inferred from dated code comments.
+- Confidence: high on routes, entry points, counts, grouping, filters, the "?" path and the backend; medium on R16 and R20 (reasoned from code, not run); low on any claim about visual styling.
 
 ## 9. Open questions for Telot
 
-1. Counts row: should the thesis figures show three counts (results, directions, sessions) as F6 says, or two as Figs 3 and 4 do?
-2. Chips on saved cards: show every scored direction (F6) or the top three with ">>" like the results page (plan §2.1)?
-3. Fig 5 / mock data: should Session 2 save one result (fixture) or none (plan)?
-4. Should the card show the word "Description:" before the abstract, as the figures and mockups do?
-5. Schedule: Fall goal 2 says the MVP is complete by Nov 5, and today is Oct 20 with U2 restarted and I2 to I8 not started. Should the date or the scope in the plan change? If I6 and I7 slip, R26 becomes a blocker for the study.
-6. Task List cleanup: may I take it that "goal-linked saving", "Suggested Next Step", "Recap and Resume" and "embedding-based 1 to 5 stars" are all stale and should be replaced by the §3, §5 and Impl descriptions?
-7. Should the plan say what opens Screens 3 and 4 (circle, bar segment, tile, button), that a card stays after an unsave, and that a grey chip saves under another direction (E2, E3, E5)?
-8. Should the on-demand "why" call (F6) be added to the plan's list of AI components in the Implementation Note?
+1. A session's saved results opened from the Overview: should the button be "Return to Workspace" (back to the Overview, as the plan says) or "Continue searching" (restore that session's results page, as the code does)? (R15)
+2. Are the per-sub-goal pastel colours on Saved results final, and should saved tags on the results page stay blue? If yes, the plan's "solid blue" wording changes. (R23, R25, R30)
+3. In a one-sub-goal view, should the sub-goals count show only the chosen sub-goal, or every sub-goal on the shown cards? (R20)
+4. Should a participant who unticked every sub-goal still be able to open Saved results from the Overview? (E8)
+5. Should the hidden header "Saved Results" button and the hidden count circle and session segments stay as dead code, or be removed? (E1, E2)
 
 ## Appendix: files read
 
-Plan (minds-doc @ fc321d4): `Claude outputs/Telot Thesis Planning Documents v27.docx` (extracted with `agents/save-diff/extract_plan.sh` to scratch; read whole text; opened figures image3, image5, image6, image7); `agents/save-diff/AGENT.md`, `agents/save-diff/extract_plan.sh`, `agents/plan-diff/find_latest_plan_doc.py` (output only); `Claude outputs/technical-specification.md` (grep only); `claude output/` (grep only).
+Plan (minds-doc @ 4fa3494, 2026-10-26): `Claude outputs/Telot Thesis Planning Documents v30.docx` (extracted to a scratch folder outside both repos; images image5.png, image6.png, image7.png opened); `Claude outputs/v30-changes-summary.md`; `Claude outputs/change-ledger.md`; `Claude outputs/technical-specification.md` (searched only); `agents/save-diff/AGENT.md`, `agents/save-diff/extract_plan.sh`, `agents/plan-diff/find_latest_plan_doc.py` (run).
 
-Code (minds-app @ ba707ba48c21, all under `/home/claude/akane-asahi/minds-app/`):
-- Docs: `STATUS.md`, `CLAUDE.md`, `DECISIONS.md` (saved and U4 entries), `docs/spec/00-index.md`, `01-core.md`, `02-data-model.md`, `03-api.md`, `F6-saved-views.md`, `build-plan.md`, `deferred.md` (lines 8-25), `open-questions.md` (grep), `accessibility.md` (lines 60-74), `F3-serp-cards-chips.md` (grep and lines 100-112), `F5-your-sessions.md` (grep), `docs/design/04, 05, 06 .png`, `docs/design/README.md`.
-- Saved view: `frontend/src/features/savedResults/{SavedResultsScreen.jsx, SavedResultCard.jsx, savedModel.js, SavedResultsScreen.test.jsx (test names and lines 20-60), savedModel.test.js (test names)}`.
-- Wiring and entry points: `frontend/src/app/router/index.js`, `ui-dev/UIDevRoutes.jsx`, `ui-dev/SerpDevPage.jsx` (first 60 lines), `features/serp/layout/{MainHeader.jsx, Layout.jsx}`, `features/serp/minds/{DirectionChip.jsx, SavedChips.jsx, DirectionsPanel.jsx, MindsSerpContext.jsx (partial)}`, `features/serp/components/{SavedDocumentCard.jsx, SavedSearchResults.jsx, ResultCardShell.jsx (head)}`, `features/serp/pages/WorkspaceView.jsx`, `features/search/{pages/SavedSearchResultsView.jsx, components/SavedSearchResults.jsx}` (diff only), `features/workspace/pages/WorkspaceView.jsx`, `features/workspace/api/savedDocsQueryService.js` (grep), `features/yourSessions/{YourSessionsScreen.jsx, DirectionCard.jsx, SessionTile.jsx, sessionsModel.js}`, `shared/components/{SavedDocumentCard.jsx, DocumentAbstract.jsx}` (grep/head), `mocks/sessionsFixtures.js`.
-- Backend: `backend/routes/saveddocsRoutes.js`, `backend/models/savedResultModel.js`, `backend/server.js` (grep), grep across `backend/` for `savedresults`/`SavedResult`.
+Spec copy (minds-doc @ 4fa3494): `minds-app-claude-files/docs/spec/F6-saved-views.md`, `build-plan.md`, `minds-app-claude-files/STATUS.md`, `minds-app-claude-files/DECISIONS.md` (saved-related entries only). Design mockups `docs/design/04-06*.png` were not opened.
+
+Code (minds-app @ 533d618c36be06d240a2640842179a4f2ad22676, 2026-10-27):
+- `frontend/src/features/savedResults/`: `SavedResultsPage.jsx`, `SavedResultsScreen.jsx`, `SavedResultCard.jsx`, `savedModel.js`, `savedApi.js`, test names in `SavedResultsPage.test.jsx`, `SavedResultsScreen.test.jsx`, `savedModel.test.js`; `savedModel.test.js` read in part.
+- `frontend/src/features/mindsSerp/`: `MindsSerpPage.jsx`, `MindsSerpLayout.jsx`, `mindsSerpApi.js` (lines 60-115), `useLiveSerp.js` (lines 245-285), `MindsSerpSavedSwitch.test.jsx` (names).
+- `frontend/src/features/serp/`: `layout/MainHeader.jsx`, `minds/DirectionChip.jsx`, `minds/DirectionsPanel.jsx`, `components/ResultCardShell.jsx` (parts), `shared/components/WorkspaceTitleCard.jsx`, `shared/components/DocumentAbstract.jsx`.
+- `frontend/src/features/yourSessions/`: `YourSessionsPage.jsx`, `YourSessionsScreen.jsx`, `DirectionCard.jsx`, `SessionTile.jsx`.
+- `frontend/src/app/router/index.js`, `frontend/src/theme/directionColors.js`, `frontend/src/ui-dev/UIDevRoutes.jsx`, `mockApi.js` (searched), `frontend/src/features/workspace/pages/WorkspaceView.jsx` (head), import search for the legacy and duplicate saved views.
+- `backend/controllers/savedViewController.js`, `resultsController.js` (lines 18-70, 144-172), `backend/services/savedService.js`, `backend/models/savedResultModel.js`, `backend/routes/workspaceRoutes.js`, `backend/routes/resultsRoutes.js`, `backend/schemas/results.js` (saved query schema), `backend/__tests__/savedView.test.js` (test names and lines 134-139).
